@@ -22,6 +22,7 @@ export function InscriptionsPanel({
   busy: boolean;
 }) {
   const gm = snapshot.player.role === 'GM';
+  if (!gm) return null;
   const inscriptions = visibleItems(snapshot.items, snapshot.player.role).flatMap((item) => {
     const inscription = readInscription(item);
     return inscription ? [{ item, inscription }] : [];
@@ -94,7 +95,7 @@ export function InscriptionsPanel({
                 </button>
               </p>
             ))}
-          {gm ? (
+          {gm && (
             <>
               <button
                 className="configure"
@@ -120,11 +121,6 @@ export function InscriptionsPanel({
                 </p>
               </div>
             </>
-          ) : (
-            <p className="empty">
-              Selecciona una runa del mapa y usa «Leer inscripción», o activa la herramienta
-              Inspeccionar.
-            </p>
           )}
         </>
       )}

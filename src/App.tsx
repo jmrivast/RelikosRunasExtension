@@ -52,7 +52,7 @@ export function App({ adapter }: { adapter: Adapter }) {
     return (
       <main className="shell">
         <h1>Relikos</h1>
-        <p role={loadError ? 'alert' : 'status'}>{loadError || 'Consultando las runas…'}</p>
+        <p role={loadError ? 'alert' : 'status'}>{loadError || 'Cargando…'}</p>
         {loadError && <button onClick={() => window.location.reload()}>Volver a conectar</button>}
       </main>
     );
@@ -97,69 +97,75 @@ export function App({ adapter }: { adapter: Adapter }) {
           )}
         </aside>
       )}
-      {!routeModal && (
-        <main className="shell">
-          <header className="brand">
-            <img src="/icon.svg" alt="" />
-            <div>
-              <h1>Relikos</h1>
-              <p>Runas Antiguas</p>
-            </div>
-          </header>
-          {gm && (
-            <nav aria-label="Administración">
-              {tabs.map((t) => (
-                <button
-                  key={t}
-                  aria-current={tab === t ? 'page' : undefined}
-                  onClick={() => setTab(t)}
-                >
-                  {t}
-                </button>
-              ))}
-            </nav>
-          )}
-          {error && (
-            <p className="error" role="alert">
-              {error}
-            </p>
-          )}
-          {notice && (
-            <p className="success" role="status">
-              {notice}
-            </p>
-          )}
-          {gm &&
-            config.warnings.map((w, i) => (
-              <p role="alert" key={i} className="error">
-                {w}
+      {!routeModal &&
+        (gm ? (
+          <main className="shell">
+            <header className="brand">
+              <img src="/icon.svg" alt="" />
+              <div>
+                <h1>Relikos</h1>
+                <p>Runas Antiguas</p>
+              </div>
+            </header>
+            {gm && (
+              <nav aria-label="Administración">
+                {tabs.map((t) => (
+                  <button
+                    key={t}
+                    aria-current={tab === t ? 'page' : undefined}
+                    onClick={() => setTab(t)}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </nav>
+            )}
+            {error && (
+              <p className="error" role="alert">
+                {error}
               </p>
-            ))}
-          <div className="panel">
-            {(!gm || tab === 'Inscripciones') && (
-              <InscriptionsPanel {...{ snapshot, config, adapter, run, busy }} />
             )}
-            {gm && tab === 'Jugadores' && <PlayersPanel {...shared} players={snapshot.players} />}{' '}
-            {gm && tab === 'Idiomas' && (
-              <LanguagesPanel {...shared} onPlayers={() => setTab('Jugadores')} />
-            )}{' '}
-            {gm && tab === 'Configuración' && (
-              <SettingsPanel
-                key={JSON.stringify(config.settings)}
-                {...{ service, run, busy }}
-                settings={config.settings}
-              />
+            {notice && (
+              <p className="success" role="status">
+                {notice}
+              </p>
             )}
-          </div>
-          <footer className="shell-footer">
-            {gm
-              ? 'Dungeon Master'
-              : config.profiles.find((p) => p.playerId === snapshot.player.id)?.character ||
-                snapshot.player.name}{' '}
-            <span>Las Crónicas de Relikos</span>
-          </footer>
-        </main>
-      )}
+            {gm &&
+              config.warnings.map((w, i) => (
+                <p role="alert" key={i} className="error">
+                  {w}
+                </p>
+              ))}
+            <div className="panel">
+              {gm && tab === 'Inscripciones' && (
+                <InscriptionsPanel {...{ snapshot, config, adapter, run, busy }} />
+              )}
+              {gm && tab === 'Jugadores' && <PlayersPanel {...shared} players={snapshot.players} />}{' '}
+              {gm && tab === 'Idiomas' && (
+                <LanguagesPanel {...shared} onPlayers={() => setTab('Jugadores')} />
+              )}{' '}
+              {gm && tab === 'Configuración' && (
+                <SettingsPanel
+                  key={JSON.stringify(config.settings)}
+                  {...{ service, run, busy }}
+                  settings={config.settings}
+                />
+              )}
+            </div>
+            <footer className="shell-footer">
+              {gm
+                ? 'Dungeon Master'
+                : config.profiles.find((p) => p.playerId === snapshot.player.id)?.character ||
+                  snapshot.player.name}{' '}
+              <span>Las Crónicas de Relikos</span>
+            </footer>
+          </main>
+        ) : (
+          <main className="shell">
+            <h1>Relikos</h1>
+            <p>Este panel está reservado al Dungeon Master.</p>
+          </main>
+        ))}
       {navigation && (
         <Modal onClose={close}>
           {!snapshot.ready || !item ? (

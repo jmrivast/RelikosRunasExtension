@@ -19,7 +19,7 @@ Con dos cuentas puedes probar al DM y a Basili, revocando el idioma para represe
 1. Publica `dist/` bajo HTTPS; abre `/manifest.json` y verifica su JSON.
 2. Instala y habilita la extensión en una sala de prueba de Owlbear.
 3. Abre la sala con el DM y otra cuenta en otro perfil de navegador. Cada una debe tener un ID distinto en Jugadores.
-4. Abre una escena. Importa `public/runa-relikos.png`, colócala y comprueba que sea seleccionable por jugadores; para un objeto bloqueado usa Inspeccionar.
+4. Abre una escena. Importa `public/runa-relikos.png`, colócala y comprueba que sea seleccionable por jugadores para acceder a su menú contextual.
 
 ## Lista de aceptación
 
@@ -31,7 +31,7 @@ Con dos cuentas puedes probar al DM y a Basili, revocando el idioma para represe
 - [ ] Mientras Basili lee, la cuenta del DM y la tercera cuenta no abren ninguna ventana.
 - [ ] La tercera cuenta sin idioma ve runas, sin botones administrativos. Con dos cuentas, revoca temporalmente el idioma de Basili para comprobarlo.
 - [ ] Revocar el idioma con la lectura abierta sustituye el texto; concederlo lo restaura.
-- [ ] Inspeccionar abre la misma inscripción con un clic. Comprobar también un objeto bloqueado si lo usarás así en la campaña.
+- [ ] El hub del jugador no muestra catálogo, cantidades, títulos, idiomas ni botones de lectura. La barra no incluye herramienta ni modo de inspección. El menú del objeto sigue abriendo su inscripción.
 - [ ] Cerrar con ×, botón y Escape funciona. Reabrir conserva símbolos estables.
 - [ ] Un texto de varios párrafos y uno largo respetan saltos y ofrecen scroll; el cierre es accesible en móvil.
 - [ ] Duplicar el objeto crea una segunda inscripción que puede editarse sin cambiar la primera.

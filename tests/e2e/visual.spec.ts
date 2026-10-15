@@ -23,8 +23,8 @@ test('evidencias visuales de administración, lectura y móvil', async ({ page }
     .getByRole('dialog')
     .screenshot({ path: resolve(dir, 'reader.png'), animations: 'disabled' });
   await page.getByRole('button', { name: 'Cerrar inscripción' }).click();
-  await page.goto('/?demo=1&actor=demo-other');
-  await page.getByRole('button', { name: 'Leer', exact: true }).click();
+  await page.goto('/?demo=1&actor=demo-other&view=read&item=rune-aurill');
+  await expect(page.getByRole('dialog')).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
   await page
     .getByRole('dialog')

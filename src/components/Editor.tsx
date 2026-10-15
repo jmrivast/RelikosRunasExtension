@@ -104,8 +104,7 @@ export function Editor({
             Ocultar idioma a los jugadores
           </label>
           <p className="muted small">
-            Se aplica a la lectura y al listado, aunque comprendan el idioma. El DM siempre ve
-            ambos.
+            Se aplica a la lectura, aunque comprendan el idioma. El DM siempre ve ambos.
           </p>
         </fieldset>
         <label htmlFor="inscription-text">Texto verdadero</label>

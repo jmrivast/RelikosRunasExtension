@@ -2,7 +2,7 @@ import OBR from '@owlbear-rodeo/sdk';
 import { NS, INSCRIPTION_KEY, readInscription } from './domain';
 import { OwlbearAdapter } from './owlbear';
 
-/** Only this persistent iframe registers menus/tools; panels and reader iframes never do. */
+/** Only this persistent iframe registers object menus; panels and readers never do. */
 export async function registerInteractions(adapter: OwlbearAdapter) {
   const report = (error: unknown) => {
     void OBR.notification.show(
@@ -14,9 +14,7 @@ export async function registerInteractions(adapter: OwlbearAdapter) {
     void adapter.open({ view, itemId }).catch(report);
   };
   const readId = `${NS}/read`,
-    editId = `${NS}/edit`,
-    toolId = `${NS}/inspect`,
-    modeId = `${NS}/inspect-mode`;
+    editId = `${NS}/edit`;
   try {
     await OBR.contextMenu.create({
       id: readId,
@@ -54,35 +52,11 @@ export async function registerInteractions(adapter: OwlbearAdapter) {
           .catch(report);
       },
     });
-    await OBR.tool.create({
-      id: toolId,
-      icons: [{ icon: '/icon.svg', label: 'Inspeccionar' }],
-      defaultMode: modeId,
-    });
-    await OBR.tool.createMode({
-      id: modeId,
-      icons: [{ icon: '/icon.svg', label: 'Inspeccionar runa' }],
-      cursors: [{ cursor: 'pointer' }],
-      onToolClick(_context, event) {
-        if (event.target && readInscription(event.target)) open('read', event.target.id);
-      },
-    });
   } catch (error) {
-    await Promise.allSettled([
-      OBR.contextMenu.remove(readId),
-      OBR.contextMenu.remove(editId),
-      OBR.tool.removeMode(modeId),
-      OBR.tool.remove(toolId),
-    ]);
+    await Promise.allSettled([OBR.contextMenu.remove(readId), OBR.contextMenu.remove(editId)]);
     throw error;
   }
-  return () =>
-    Promise.allSettled([
-      OBR.contextMenu.remove(readId),
-      OBR.contextMenu.remove(editId),
-      OBR.tool.removeMode(modeId),
-      OBR.tool.remove(toolId),
-    ]);
+  return () => Promise.allSettled([OBR.contextMenu.remove(readId), OBR.contextMenu.remove(editId)]);
 }
 if (OBR.isAvailable) {
   OBR.onReady(() => {

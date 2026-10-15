@@ -30,7 +30,7 @@ La documentación describe un retorno de cancelación para `OBR.onReady`, pero e
 - `service.ts`: validación y comprobación del rol antes de todas las escrituras; límite preventivo de metadatos de sala.
 - `adapter.ts`: contrato pequeño de la integración.
 - `owlbear.ts`: llamadas reales al SDK, parche por clave, actualizaciones Immer, modales exclusivamente locales, control de escena mediante generación local de readiness.
-- `background.ts`: dos menús y herramienta Inspeccionar. Esta es la única página que registra interacciones. Limpieza al recargar/cerrar; rollback de registros ante fallo parcial.
+- `background.ts`: dos menús contextuales de objeto, sin herramientas ni modos de inspección. Esta es la única página que registra interacciones. Limpieza al recargar/cerrar; rollback de registros ante fallo parcial.
 - `demo.ts`: adaptador local de pruebas con tres IDs, localStorage compartido entre pestañas y navegación independiente por pestaña. Solo se carga en desarrollo con `?demo=1`; queda eliminado del build de producción.
 - `useSession.ts`: sincronización reactiva con revisión incremental; descarta resultados antiguos y cancela suscripciones.
 - `components/`: lector, editor, listas y formularios. Un `dialog` nativo gestiona foco, Escape y navegación de teclado.
@@ -50,7 +50,7 @@ Cada clave anterior lleva el namespace completo como prefijo. Las escrituras no 
 
 Telikari antiguo es el valor inicial mientras no haya entrada explícita; se persiste al renombrarlo/guardarlo. Los perfiles siempre se almacenan por ID, nunca por el nombre o por `connectionId`. El ID identifica a la cuenta y se conserva al reconectar con esa misma cuenta; invitado, cuenta distinta, otra sala o datos borrados requieren revisar la asignación. No se promete identidad entre cuentas.
 
-El ID canónico de inscripción es `runa:{ID real del objeto}`. Al leer una copia se normalizan `id` y `objectId` sobre la copia real; al guardar se persiste la identidad normalizada. Un objeto duplicado hereda el contenido pero se edita independientemente. Al eliminar el objeto desaparece su inscripción porque no existe un registro paralelo que quede huérfano. Los objetos ocultos se excluyen del panel de jugadores; la niebla y la selección visible siguen dependiendo de Owlbear. El listado del panel no debe usarse para secretos de ubicación bajo niebla.
+El ID canónico de inscripción es `runa:{ID real del objeto}`. Al leer una copia se normalizan `id` y `objectId` sobre la copia real; al guardar se persiste la identidad normalizada. Un objeto duplicado hereda el contenido pero se edita independientemente. Al eliminar el objeto desaparece su inscripción porque no existe un registro paralelo que quede huérfano. El catálogo es exclusivo del DM; el hub de jugadores no revela existencia ni cantidades de inscripciones. Los jugadores abren la lectura desde el menú contextual del objeto seleccionado. La visibilidad bajo niebla y la selección siguen dependiendo de Owlbear; esta interfaz no constituye un sistema de descubrimiento ni de autorización por distancia.
 
 ## Límites y concurrencia
 

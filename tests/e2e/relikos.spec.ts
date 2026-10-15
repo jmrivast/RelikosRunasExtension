@@ -2,7 +2,13 @@ import { expect, test, type Page } from '@playwright/test';
 import { SAMPLE, INSCRIPTION_KEY, PROFILE_PREFIX, NS } from '../../src/domain';
 const entry = (actor = 'demo-dm') => `/?demo=1&actor=${actor}`;
 async function openReading(page: Page) {
-  await page.getByRole('button', { name: 'Leer', exact: true }).first().click();
+  const actor = new URL(page.url()).searchParams.get('actor') ?? 'demo-dm';
+  if (actor === 'demo-dm') {
+    await page.getByRole('button', { name: 'Leer', exact: true }).first().click();
+  } else {
+    // Simulates the reader route opened by the object's SDK context menu, never a hub catalog.
+    await page.goto(entry(actor) + '&view=read&item=rune-aurill');
+  }
   await expect(page.getByRole('dialog')).toBeVisible();
 }
 test.beforeEach(async ({ page }) => {
@@ -58,6 +64,22 @@ test('Basili lee el texto y no tiene controles administrativos', async ({ page }
   await openReading(page);
   await expect(page.getByTestId('reading')).toHaveText(SAMPLE.text);
 });
+
+for (const actor of ['demo-basili', 'demo-other']) {
+  test(`el hub no revela inscripciones ni accesos de lectura a ${actor}`, async ({ page }) => {
+    await page.goto(entry(actor));
+    await expect(page.getByText('Este panel está reservado al Dungeon Master.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Inscripciones', exact: true })).toHaveCount(0);
+    await expect(page.locator('.inscription-row')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Leer', exact: true })).toHaveCount(0);
+    await expect(page.locator('body')).not.toContainText(SAMPLE.title);
+    await expect(page.locator('body')).not.toContainText('Telikari antiguo');
+    await expect(page.locator('body')).not.toContainText('Inspeccionar');
+    await page.getByLabel('Escena de prueba').selectOption('b');
+    await expect(page.getByText('Este panel está reservado al Dungeon Master.')).toBeVisible();
+    await expect(page.locator('body')).not.toContainText('No hay');
+  });
+}
 
 test('ocultar título e idioma persiste y se aplica a jugadores con y sin lectura', async ({
   page,
@@ -117,9 +139,9 @@ test('título e idioma se pueden ocultar y restaurar por separado', async ({ pag
       .getByRole('checkbox', { name: 'Ocultar idioma a los jugadores' })
       .setChecked(language);
     await page.getByRole('button', { name: 'Guardar inscripción' }).click();
-    await expect(player.getByText(SAMPLE.title, { exact: true })).toHaveCount(title ? 0 : 2);
+    await expect(player.getByText(SAMPLE.title, { exact: true })).toHaveCount(title ? 0 : 1);
     await expect(player.getByText('Telikari antiguo', { exact: true })).toHaveCount(
-      language ? 0 : 2,
+      language ? 0 : 1,
     );
     await expect(player.getByRole('dialog')).toHaveAccessibleName(
       title ? 'Inscripción' : SAMPLE.title,

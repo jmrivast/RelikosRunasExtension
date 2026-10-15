@@ -81,7 +81,7 @@ describe('contratos del adaptador SDK real (transporte simulado)', () => {
     expect(sdk.default.modal.close).toHaveBeenCalledWith(MODAL_ID);
     vi.unstubAllGlobals();
   });
-  it('registra menús una sola vez en el fondo y una herramienta que abre el objeto pulsado', async () => {
+  it('abre desde el menú del objeto sin registrar herramientas que revelen pistas', async () => {
     vi.stubGlobal('window', { innerHeight: 900 });
     const adapter = new OwlbearAdapter();
     const open = vi.spyOn(adapter, 'open').mockResolvedValue();
@@ -89,18 +89,19 @@ describe('contratos del adaptador SDK real (transporte simulado)', () => {
     expect(sdk.default.contextMenu.create).toHaveBeenCalledTimes(2);
     const edit = sdk.default.contextMenu.create.mock.calls[1][0];
     expect(edit.icons[0].filter.roles).toEqual(['GM']);
-    const mode = sdk.default.tool.createMode.mock.calls[0][0];
-    mode.onToolClick(
-      {},
-      {
-        target: {
+    expect(sdk.default.tool.create).not.toHaveBeenCalled();
+    expect(sdk.default.tool.createMode).not.toHaveBeenCalled();
+    const read = sdk.default.contextMenu.create.mock.calls[0][0];
+    read.onClick({
+      items: [
+        {
           id: 'obj',
           name: 'Runa',
           visible: true,
           metadata: { [INSCRIPTION_KEY]: { ...SAMPLE, version: 1, id: 'id', objectId: 'obj' } },
         },
-      },
-    );
+      ],
+    });
     expect(open).toHaveBeenCalledWith({ view: 'read', itemId: 'obj' });
     await stop();
     expect(sdk.default.contextMenu.remove).toHaveBeenCalledTimes(2);

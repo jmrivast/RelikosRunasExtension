@@ -62,7 +62,7 @@ El nombre solo sirve para reconocerlo. La autorización usa su ID de Owlbear. Si
 1. Importa una imagen de runa y colócala en una pared. Se incluye `public/runa-relikos.png` como recurso original transparente; puedes usar cualquier imagen propia.
 2. Selecciona **un solo objeto** y usa **Configurar inscripción** en su menú contextual. También puedes pulsar **Configurar objeto seleccionado** en el panel.
 3. Completa título, idioma y texto verdadero. La escritura indescifrable personalizada es opcional; al dejarla vacía se generan símbolos deterministas respetando espacios y párrafos.
-4. En **Vista de los jugadores**, marca **Ocultar título a los jugadores** y/o **Ocultar idioma a los jugadores** si quieres mostrar solo la escritura. Son opciones independientes por inscripción; también ocultan esos datos en el listado, incluso a lectores que comprendan el idioma. El DM conserva ambos datos. Las inscripciones anteriores mantienen su presentación hasta que cambies estas opciones.
+4. En **Vista de los jugadores**, marca **Ocultar título a los jugadores** y/o **Ocultar idioma a los jugadores** si quieres mostrar solo la escritura. Son opciones independientes por inscripción, incluso para lectores que comprendan el idioma. El DM conserva ambos datos y el catálogo completo. Las inscripciones anteriores mantienen su presentación hasta que cambies estas opciones.
 5. Pulsa **Guardar inscripción**.
 
 El editor ofrece **Usar ejemplo de Aurill**, con el texto proporcionado en el encargo. No crea objetos ni añade lore automáticamente a escenas reales.
@@ -71,9 +71,9 @@ En **Inscripciones** se lista cada registro de la escena actual con su objeto e 
 
 ## Leer como jugador
 
-Selecciona la runa y elige **Leer inscripción**, o activa la herramienta **Inspeccionar** y haz un clic en la runa. La ventana se abre únicamente en tu cliente. Puedes cerrarla con ×, **Cerrar** o Escape y abrirla otra vez.
+Selecciona el objeto del mapa y elige **Leer inscripción** en su menú contextual. La ventana se abre únicamente en tu cliente. Puedes cerrarla con ×, **Cerrar** o Escape y abrirla otra vez. El hub del jugador muestra únicamente un aviso de panel reservado al DM: no enumera inscripciones, títulos, idiomas, cantidades ni accesos de lectura. No hay herramienta ni modo especial de inspección en la barra.
 
-Si tu ID comprende el idioma, aparece el texto verdadero; de lo contrario, runas. Revocar o conceder un idioma actualiza una lectura abierta cuando llegan los metadatos sincronizados. Los jugadores no reciben formularios de edición ni pueden modificar sus propios permisos mediante los flujos de la extensión. Los objetos bloqueados pueden ser difíciles de seleccionar según los permisos de Owlbear: utiliza Inspeccionar o permite su selección.
+Si tu ID comprende el idioma, aparece el texto verdadero; de lo contrario, runas. Revocar o conceder un idioma actualiza una lectura abierta cuando llegan los metadatos sincronizados. Los jugadores no reciben formularios de edición ni pueden modificar sus propios permisos mediante los flujos de la extensión. El DM debe permitir seleccionar el objeto para que el jugador pueda usar su menú; no se ofrece un acceso alternativo desde el hub.
 
 ## Añadir idiomas y ajustar la lectura
 
