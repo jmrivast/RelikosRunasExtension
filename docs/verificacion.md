@@ -56,7 +56,9 @@ Se verificó la fidelidad al sistema visual, con estas diferencias intencionadas
 
 Las 14 pruebas de navegador usan `DemoAdapter`: tres IDs simulados y almacenamiento local compartido entre pestañas. Las pruebas del adaptador real simulan las respuestas del transporte SDK; la comprobación de tipos utiliza las declaraciones del paquete instalado. El manifiesto se valida localmente según la estructura oficial, no mediante una certificación de Owlbear.
 
-**No se ejecutó una sesión autenticada de Owlbear con cuentas reales.** Permanecen por verificar allí el transporte SDK, las políticas reales de selección/objetos bloqueados, la carga en segundo plano y la persistencia de sus servicios al cerrar/reabrir. La guía `verificacion-manual.md` detalla esa prueba, sin confundirla con lo automatizado. No se verificaron Safari, Firefox ni dispositivos físicos.
+**Sí se ejecutó una prueba parcial autenticada dentro de Owlbear**, el 15 de octubre de 2026, desde el navegador integrado de Codex en Windows. Se instaló y habilitó el manifiesto de producción, se importó la imagen de la runa, se configuró el ejemplo exacto de Aurill con el panel cerrado y se leyó mediante el menú contextual. Después de recargar toda la sala, la extensión siguió activa y el panel conservó la inscripción; abrirla desde allí volvió a mostrar el texto correcto. Esto comprueba la carga de fondo, el transporte SDK y la persistencia del contenido tras recarga para ese flujo. La captura `owlbear-instalado.jpg` quedó fuera del repositorio en la carpeta de visualizaciones de esta conversación.
+
+Las conexiones presentes tenían rol DM. Permanecen por comprobar con cuentas de jugador distintas los permisos, la revocación en vivo y el aislamiento entre clientes, además de objetos bloqueados, cambios de escena y una salida/reentrada completa. La guía `verificacion-manual.md` distingue estos casos de lo ya ejecutado. No se verificaron Safari, Firefox ni dispositivos físicos.
 
 La publicación HTTPS se verifica por separado mediante respuestas del sitio y recursos desplegados. Eso tampoco sustituye la prueba dentro de Owlbear.
 

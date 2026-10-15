@@ -1,6 +1,16 @@
 # Verificación real con dos o tres cuentas
 
-Esta guía está **pendiente de ejecutar en una sala autenticada**. Las pruebas automatizadas no prueban el transporte ni el almacenamiento real de Owlbear.
+El 15 de octubre de 2026 se ejecutó una **prueba parcial en una sala autenticada**, con la versión 1.0.0 publicada en <https://relikos-runas-antiguas.pages.dev>, usando el navegador integrado de Codex en Windows.
+
+Resultados reales comprobados:
+
+- Instalación del manifiesto y activación en la sala.
+- Menú **Configurar inscripción** disponible con el panel cerrado.
+- Importación de `public/runa-relikos.png`, colocación en la escena y guardado del ejemplo exacto de Aurill en Telikari antiguo.
+- Lectura desde el menú contextual y desde el panel de inscripciones.
+- Tras recargar toda la sala, la extensión continúa activa y la inscripción conserva su objeto, idioma y texto; vuelve a abrirse correctamente.
+
+Se dejó el objeto de ejemplo en la escena. Las conexiones presentes eran de DM; **la prueba con cuentas de jugador distintas sigue pendiente**, junto con los casos adicionales de la lista siguiente. Las pruebas automatizadas no sustituyen esa comprobación.
 
 Con dos cuentas puedes probar al DM y a Basili, revocando el idioma para representar al lector desconocido. Una tercera cuenta simultánea permite comprobar el aislamiento entre los tres sin cambiar permisos.
 
@@ -13,7 +23,7 @@ Con dos cuentas puedes probar al DM y a Basili, revocando el idioma para represe
 
 ## Lista de aceptación
 
-- [ ] Con el panel cerrado, el DM selecciona el objeto y encuentra **Configurar inscripción**. Esto verifica la página de fondo.
+- [x] Con el panel cerrado, el DM selecciona el objeto y encuentra **Configurar inscripción**. Esto verifica la página de fondo.
 - [ ] El DM usa el ejemplo de Aurill, guarda Telikari antiguo y confirma que el objeto conserva posición, imagen y demás propiedades.
 - [ ] El DM ve la inscripción en el panel con el ID del objeto; puede leer y editar.
 - [ ] En Jugadores, el DM asigna Basili y Telikari antiguo al ID de la segunda cuenta y guarda.
