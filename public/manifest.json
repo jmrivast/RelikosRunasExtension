@@ -1,0 +1,16 @@
+{
+  "name": "Relikos — Runas Antiguas",
+  "version": "1.0.0",
+  "manifest_version": 1,
+  "author": "Campaña Relikos",
+  "description": "Inscripciones antiguas con lectura por idioma y jugador para Las Crónicas de Relikos.",
+  "icon": "/icon.svg",
+  "background_url": "/background.html",
+  "action": {
+    "title": "Relikos — Runas Antiguas",
+    "icon": "/icon.svg",
+    "popover": "/index.html",
+    "width": 680,
+    "height": 660
+  }
+}

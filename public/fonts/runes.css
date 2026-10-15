@@ -1,0 +1,2 @@
+/* Unicode runes use a local, freely licensed Noto fallback when available. */
+@font-face{font-family:'Relikos Runes';src:url('/fonts/NotoSansRunic-Regular.ttf') format('truetype');font-display:swap;unicode-range:U+16A0-16FF;}
