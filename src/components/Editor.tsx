@@ -27,6 +27,12 @@ export function Editor({
   );
   const [text, setText] = useState(existing?.text ?? '');
   const [unreadable, setUnreadable] = useState(existing?.unreadable ?? '');
+  const [hideTitleFromPlayers, setHideTitleFromPlayers] = useState(
+    existing?.hideTitleFromPlayers ?? false,
+  );
+  const [hideLanguageFromPlayers, setHideLanguageFromPlayers] = useState(
+    existing?.hideLanguageFromPlayers ?? false,
+  );
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [error, setError] = useState('');
   const [openedScene] = useState(sceneToken);
@@ -37,7 +43,7 @@ export function Editor({
       try {
         await service.saveInscription(
           item.id,
-          { title, languageId, text, unreadable },
+          { title, languageId, text, unreadable, hideTitleFromPlayers, hideLanguageFromPlayers },
           openedScene,
         );
         onClose();
@@ -79,6 +85,29 @@ export function Editor({
             ))}
           </select>
         </label>
+        <fieldset>
+          <legend>Vista de los jugadores</legend>
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={hideTitleFromPlayers}
+              onChange={(e) => setHideTitleFromPlayers(e.target.checked)}
+            />
+            Ocultar título a los jugadores
+          </label>
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={hideLanguageFromPlayers}
+              onChange={(e) => setHideLanguageFromPlayers(e.target.checked)}
+            />
+            Ocultar idioma a los jugadores
+          </label>
+          <p className="muted small">
+            Se aplica a la lectura y al listado, aunque comprendan el idioma. El DM siempre ve
+            ambos.
+          </p>
+        </fieldset>
         <label htmlFor="inscription-text">Texto verdadero</label>
         <textarea
           id="inscription-text"

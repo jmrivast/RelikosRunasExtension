@@ -62,7 +62,8 @@ El nombre solo sirve para reconocerlo. La autorización usa su ID de Owlbear. Si
 1. Importa una imagen de runa y colócala en una pared. Se incluye `public/runa-relikos.png` como recurso original transparente; puedes usar cualquier imagen propia.
 2. Selecciona **un solo objeto** y usa **Configurar inscripción** en su menú contextual. También puedes pulsar **Configurar objeto seleccionado** en el panel.
 3. Completa título, idioma y texto verdadero. La escritura indescifrable personalizada es opcional; al dejarla vacía se generan símbolos deterministas respetando espacios y párrafos.
-4. Pulsa **Guardar inscripción**.
+4. En **Vista de los jugadores**, marca **Ocultar título a los jugadores** y/o **Ocultar idioma a los jugadores** si quieres mostrar solo la escritura. Son opciones independientes por inscripción; también ocultan esos datos en el listado, incluso a lectores que comprendan el idioma. El DM conserva ambos datos. Las inscripciones anteriores mantienen su presentación hasta que cambies estas opciones.
+5. Pulsa **Guardar inscripción**.
 
 El editor ofrece **Usar ejemplo de Aurill**, con el texto proporcionado en el encargo. No crea objetos ni añade lore automáticamente a escenas reales.
 

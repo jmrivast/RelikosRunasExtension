@@ -58,6 +58,75 @@ test('Basili lee el texto y no tiene controles administrativos', async ({ page }
   await openReading(page);
   await expect(page.getByTestId('reading')).toHaveText(SAMPLE.text);
 });
+
+test('ocultar título e idioma persiste y se aplica a jugadores con y sin lectura', async ({
+  page,
+  context,
+}) => {
+  const player = await context.newPage();
+  await player.goto(entry('demo-basili'));
+  await openReading(player);
+  await page.getByRole('button', { name: 'Editar', exact: true }).click();
+  await page.getByRole('checkbox', { name: 'Ocultar título a los jugadores' }).check();
+  await page.getByRole('checkbox', { name: 'Ocultar idioma a los jugadores' }).check();
+  await page.getByRole('button', { name: 'Guardar inscripción' }).click();
+  await expect(player.getByRole('dialog')).toHaveAccessibleName('Inscripción');
+  await expect(player.getByText(SAMPLE.title, { exact: true })).toHaveCount(0);
+  await expect(player.getByText('Telikari antiguo', { exact: true })).toHaveCount(0);
+  await expect(player.getByTestId('reading')).toHaveText(SAMPLE.text);
+  await expect(player.locator('.reader h1')).not.toBeInViewport();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: SAMPLE.title })).toBeVisible();
+  await openReading(page);
+  await expect(page.getByRole('dialog')).toHaveAccessibleName(SAMPLE.title);
+  await expect(page.locator('.reader .language')).toHaveText('Telikari antiguo');
+  await page.getByRole('button', { name: 'Cerrar', exact: true }).click();
+  await page.getByRole('button', { name: 'Editar', exact: true }).click();
+  await expect(
+    page.getByRole('checkbox', { name: 'Ocultar título a los jugadores' }),
+  ).toBeChecked();
+  await expect(
+    page.getByRole('checkbox', { name: 'Ocultar idioma a los jugadores' }),
+  ).toBeChecked();
+  await player.goto(entry('demo-other'));
+  await expect(player.getByText(SAMPLE.title, { exact: true })).toHaveCount(0);
+  await expect(player.getByText('Telikari antiguo', { exact: true })).toHaveCount(0);
+  await openReading(player);
+  await expect(player.getByRole('dialog')).toHaveAccessibleName('Inscripción');
+  await expect(player.getByTestId('reading')).toHaveAttribute(
+    'aria-label',
+    'Escritura indescifrable',
+  );
+  await expect(player.locator('body')).not.toContainText(SAMPLE.title);
+  await expect(player.locator('body')).not.toContainText('Telikari antiguo');
+  await player.close();
+});
+
+test('título e idioma se pueden ocultar y restaurar por separado', async ({ page, context }) => {
+  const player = await context.newPage();
+  await player.goto(entry('demo-other'));
+  await openReading(player);
+  for (const [title, language] of [
+    [true, false],
+    [false, true],
+    [false, false],
+  ]) {
+    await page.getByRole('button', { name: 'Editar', exact: true }).click();
+    await page.getByRole('checkbox', { name: 'Ocultar título a los jugadores' }).setChecked(title);
+    await page
+      .getByRole('checkbox', { name: 'Ocultar idioma a los jugadores' })
+      .setChecked(language);
+    await page.getByRole('button', { name: 'Guardar inscripción' }).click();
+    await expect(player.getByText(SAMPLE.title, { exact: true })).toHaveCount(title ? 0 : 2);
+    await expect(player.getByText('Telikari antiguo', { exact: true })).toHaveCount(
+      language ? 0 : 2,
+    );
+    await expect(player.getByRole('dialog')).toHaveAccessibleName(
+      title ? 'Inscripción' : SAMPLE.title,
+    );
+  }
+  await player.close();
+});
 test('otro jugador ve solo runas estables, sin el secreto en el DOM', async ({ page }) => {
   await page.goto(entry('demo-other'));
   await openReading(page);

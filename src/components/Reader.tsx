@@ -1,4 +1,11 @@
-import { canRead, reading, type Config, type Inscription, type Identity } from '../domain';
+import {
+  canRead,
+  inscriptionPresentation,
+  reading,
+  type Config,
+  type Inscription,
+  type Identity,
+} from '../domain';
 export function Reader({
   inscription,
   config,
@@ -11,6 +18,7 @@ export function Reader({
   onClose: () => void;
 }) {
   const known = canRead(player, inscription, config);
+  const presentation = inscriptionPresentation(player, inscription);
   return (
     <article
       className={`reader ${config.settings.animate ? 'appear' : ''}`}
@@ -20,11 +28,15 @@ export function Reader({
         ×
       </button>
       <img className="sigil" src="/icon.svg" alt="" />
-      <h1 id="dialog-title">{inscription.title}</h1>
-      <p className="language">
-        {config.languages.find((l) => l.id === inscription.languageId)?.name ??
-          'Idioma desconocido'}
-      </p>
+      <h1 id="dialog-title" className={presentation.hideTitle ? 'sr-only' : undefined}>
+        {presentation.title}
+      </h1>
+      {!presentation.hideLanguage && (
+        <p className="language">
+          {config.languages.find((l) => l.id === inscription.languageId)?.name ??
+            'Idioma desconocido'}
+        </p>
+      )}
       <div className="ornament" aria-hidden="true">
         ◇
       </div>

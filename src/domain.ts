@@ -30,6 +30,8 @@ export const inscriptionSchema = z.object({
   languageId: id,
   text: z.string().trim().min(1).max(12000),
   unreadable: z.string().max(12000).optional(),
+  hideTitleFromPlayers: z.boolean().optional(),
+  hideLanguageFromPlayers: z.boolean().optional(),
 });
 export type Language = z.infer<typeof languageSchema>;
 export type Profile = z.infer<typeof profileSchema>;
@@ -108,6 +110,11 @@ export function canRead(player: Identity, inscription: Inscription, config: Conf
         (p) => p.playerId === player.id && p.languageIds.includes(inscription.languageId),
       ))
   );
+}
+export function inscriptionPresentation(player: Identity, inscription: Inscription) {
+  const hideTitle = player.role !== 'GM' && inscription.hideTitleFromPlayers === true;
+  const hideLanguage = player.role !== 'GM' && inscription.hideLanguageFromPlayers === true;
+  return { title: hideTitle ? 'Inscripción' : inscription.title, hideTitle, hideLanguage };
 }
 export function assertGM(player: Identity) {
   if (player.role !== 'GM') throw new Error('Solo el Dungeon Master puede realizar esta acción.');

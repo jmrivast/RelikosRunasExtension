@@ -6,6 +6,7 @@ import {
   INSCRIPTION_KEY,
   inscriptionId,
   inscriptionSchema,
+  inscriptionPresentation,
   LANGUAGE_PREFIX,
   PROFILE_PREFIX,
   readConfig,
@@ -110,6 +111,17 @@ describe('escritura rúnica', () => {
     ));
 });
 describe('validación y persistencia', () => {
+  it('conserva la presentación de inscripciones antiguas sin opciones de ocultación', () => {
+    const legacy = inscriptionSchema.parse(inscription);
+    expect(inscriptionPresentation(other, legacy)).toEqual({
+      title: SAMPLE.title,
+      hideTitle: false,
+      hideLanguage: false,
+    });
+    expect(
+      inscriptionSchema.safeParse({ ...inscription, hideTitleFromPlayers: 'sí' }).success,
+    ).toBe(false);
+  });
   it('rechaza registros incompletos y versiones desconocidas', () => {
     for (const bad of [
       null,

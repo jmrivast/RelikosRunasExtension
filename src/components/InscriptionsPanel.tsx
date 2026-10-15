@@ -1,5 +1,11 @@
 import type { Adapter } from '../adapter';
-import { readInscription, INSCRIPTION_KEY, type Snapshot, type Config } from '../domain';
+import {
+  readInscription,
+  inscriptionPresentation,
+  INSCRIPTION_KEY,
+  type Snapshot,
+  type Config,
+} from '../domain';
 import { visibleItems } from '../adapter';
 import type { Run } from '../types';
 export function InscriptionsPanel({
@@ -31,44 +37,49 @@ export function InscriptionsPanel({
       ) : (
         <>
           <div className="inscriptions">
-            {inscriptions.map(({ item, inscription }) => (
-              <div className="inscription-row" key={item.id}>
-                <img src="/icon.svg" alt="" />
-                <div className="inscription-info">
-                  <h3>{inscription.title}</h3>
-                  <p className="ice">
-                    {config.languages.find((l) => l.id === inscription.languageId)?.name ??
-                      'Idioma desconocido'}
-                  </p>
-                  {gm && (
-                    <p className="muted small">
-                      {item.name}
-                      <code>{item.id}</code>
-                      {!item.visible && ' · Objeto oculto'}
-                    </p>
-                  )}
-                </div>
-                <div className="actions">
-                  <button
-                    className="read-button"
-                    onClick={() => {
-                      void run(() => adapter.open({ view: 'read', itemId: item.id }));
-                    }}
-                  >
-                    Leer
-                  </button>
-                  {gm && (
+            {inscriptions.map(({ item, inscription }) => {
+              const presentation = inscriptionPresentation(snapshot.player, inscription);
+              return (
+                <div className="inscription-row" key={item.id}>
+                  <img src="/icon.svg" alt="" />
+                  <div className="inscription-info">
+                    <h3>{presentation.title}</h3>
+                    {!presentation.hideLanguage && (
+                      <p className="ice">
+                        {config.languages.find((l) => l.id === inscription.languageId)?.name ??
+                          'Idioma desconocido'}
+                      </p>
+                    )}
+                    {gm && (
+                      <p className="muted small">
+                        {item.name}
+                        <code>{item.id}</code>
+                        {!item.visible && ' · Objeto oculto'}
+                      </p>
+                    )}
+                  </div>
+                  <div className="actions">
                     <button
+                      className="read-button"
                       onClick={() => {
-                        void run(() => adapter.open({ view: 'edit', itemId: item.id }));
+                        void run(() => adapter.open({ view: 'read', itemId: item.id }));
                       }}
                     >
-                      Editar
+                      Leer
                     </button>
-                  )}
+                    {gm && (
+                      <button
+                        onClick={() => {
+                          void run(() => adapter.open({ view: 'edit', itemId: item.id }));
+                        }}
+                      >
+                        Editar
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           {gm &&
             invalid.map((item) => (
