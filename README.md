@@ -1,12 +1,12 @@
 # Relikos — Runas Antiguas
 
-Extensión para Owlbear Rodeo 2.0 de **Las Crónicas de Relikos: Hijos del Caos**. El DM convierte objetos del mapa en inscripciones; cada jugador lee el texto verdadero solo si su ID de cuenta tiene el idioma correspondiente. El DM siempre puede leer y editar.
+Extensión para Owlbear Rodeo 2.0 de **Las Crónicas de Relikos: Hijos del Caos**. El DM convierte objetos del mapa en inscripciones; cada jugador lee según sus idiomas o una revelación explícita para esa inscripción. El DM siempre puede leer y editar.
 
 Ventana original de fantasía oscura con fondo de piedra y ceniza, bordes de metal envejecido, títulos dorados, texto marfil y acentos azul hielo. Adaptable a móvil, con desplazamiento, Escape y movimiento reducido. Sin backend.
 
 ## Estado de entrega
 
-Código fuente, pruebas, manifiesto, icono original y fuente rúnica local incluidos. La carpeta local `dist/` contiene la compilación estática (se genera con `npm run build` y se excluye de Git). Publicado y verificado por HTTPS en Cloudflare Pages: [manifiesto de instalación](https://relikos-runas-antiguas.pages.dev/manifest.json). Código: [RelikosRunasExtension](https://github.com/jmrivast/RelikosRunasExtension). **Todavía falta la verificación dentro de una sala autenticada de Owlbear.** Consulta `docs/verificacion.md` para resultados y `docs/verificacion-manual.md` para la prueba con cuentas reales.
+Código fuente, pruebas, manifiesto, icono original y fuente rúnica local incluidos. La carpeta local `dist/` contiene la compilación estática (se genera con `npm run build` y se excluye de Git). Publicado y verificado por HTTPS en Cloudflare Pages: [manifiesto de instalación](https://relikos-runas-antiguas.pages.dev/manifest.json). Código: [RelikosRunasExtension](https://github.com/jmrivast/RelikosRunasExtension). La integración básica se verificó con cuentas reales de DM y jugador, incluidos lectura, concesión/revocación por idioma y ocultación de título/idioma. Consulta `docs/verificacion.md` para resultados y `docs/verificacion-manual.md` para el protocolo con cuentas reales.
 
 ## Desarrollo local
 
@@ -74,6 +74,16 @@ En **Inscripciones** se lista cada registro de la escena actual con su objeto e 
 Selecciona el objeto del mapa y elige **Leer inscripción** en su menú contextual. La ventana se abre únicamente en tu cliente. Puedes cerrarla con ×, **Cerrar** o Escape y abrirla otra vez. El hub del jugador muestra únicamente un aviso de panel reservado al DM: no enumera inscripciones, títulos, idiomas, cantidades ni accesos de lectura. No hay herramienta ni modo especial de inspección en la barra.
 
 Si tu ID comprende el idioma, aparece el texto verdadero; de lo contrario, runas. Revocar o conceder un idioma actualiza una lectura abierta cuando llegan los metadatos sincronizados. Los jugadores no reciben formularios de edición ni pueden modificar sus propios permisos mediante los flujos de la extensión. El DM debe permitir seleccionar el objeto para que el jugador pueda usar su menú; no se ofrece un acceso alternativo desde el hub.
+
+## Revelaciones, traducción parcial y notas del DM (1.3.0)
+
+En **Editar inscripción**, despliega **Revelación por jugador**. Cada cuenta, identificada por su ID, tiene tres opciones: **Según sus idiomas** (comportamiento anterior), **Traducción parcial** o **Texto completo**. La revelación solo afecta a ese objeto; no concede el idioma, no revela otras inscripciones ni abre ventanas al jugador. Volver a **Según sus idiomas** retira la concesión. Los permisos por idioma siguen teniendo prioridad: un lector que ya conoce la lengua conserva el texto completo. Se mantienen destinatarios desconectados y las opciones de ocultar título/idioma.
+
+En **Traducción parcial**, escribe las pistas legibles y encierra los fragmentos ocultos con dobles corchetes: `[[El rey]] regresa [[al norte]]`. El jugador asignado verá runas alrededor de «regresa». La vista previa muestra el resultado antes de guardar. Los marcadores deben estar cerrados, sin anidación; no se guarda una asignación parcial sin texto. Guarda con **Guardar inscripción**. No se genera ni altera el texto verdadero automáticamente. Sin asignación, los jugadores que no conocen la lengua conservan sus runas habituales.
+
+**Notas privadas del DM** tiene su propio botón **Guardar nota privada**. Las notas se almacenan solo en este navegador, separadas por sala, cuenta de DM y objeto. No se escriben en metadatos de Owlbear, no se envían a los jugadores, no se copian al duplicar objetos y no se sincronizan entre dispositivos ni entre DMs. Borrar los datos del navegador las elimina. Vaciar y guardar la nota la elimina. Cerrar o cancelar el editor no guarda una nota pendiente; guardar la inscripción tampoco la guarda.
+
+Los campos nuevos son opcionales dentro del esquema v1: las inscripciones anteriores funcionan sin migración y sin cambios de permisos hasta que el DM configure una revelación.
 
 ## Añadir idiomas y ajustar la lectura
 

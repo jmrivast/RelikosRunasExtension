@@ -38,6 +38,7 @@ export class OwlbearAdapter implements Adapter {
     const items = ready ? await OBR.scene.items.getItems() : [];
     if (epoch !== this.epoch) return this.snapshot();
     return {
+      roomId: OBR.room.id,
       player: { id, name, role },
       players: [
         ...new Map(

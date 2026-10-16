@@ -1,11 +1,23 @@
 import { useState, type FormEvent } from 'react';
-import { SAMPLE, type Config, type Inscription, type MapItem } from '../domain';
+import {
+  SAMPLE,
+  partialReading,
+  validPartial,
+  type Config,
+  type Identity,
+  type Inscription,
+  type MapItem,
+} from '../domain';
+import { PrivateNote } from './PrivateNote';
 import type { RelikosService } from '../service';
 import type { Run } from '../types';
 export function Editor({
   item,
   existing,
   config,
+  players,
+  player,
+  roomId,
   service,
   run,
   busy,
@@ -15,6 +27,9 @@ export function Editor({
   item: MapItem;
   existing: Inscription | null;
   config: Config;
+  players: Identity[];
+  player: Identity;
+  roomId: string;
   service: RelikosService;
   run: Run;
   busy: boolean;
@@ -27,6 +42,8 @@ export function Editor({
   );
   const [text, setText] = useState(existing?.text ?? '');
   const [unreadable, setUnreadable] = useState(existing?.unreadable ?? '');
+  const [partialText, setPartialText] = useState(existing?.partialText ?? '');
+  const [revelations, setRevelations] = useState(existing?.revelations ?? []);
   const [hideTitleFromPlayers, setHideTitleFromPlayers] = useState(
     existing?.hideTitleFromPlayers ?? false,
   );
@@ -36,6 +53,13 @@ export function Editor({
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [error, setError] = useState('');
   const [openedScene] = useState(sceneToken);
+  const readers = new Map(players.filter((p) => p.role !== 'GM').map((p) => [p.id, p.name]));
+  for (const profile of config.profiles)
+    if (!readers.has(profile.playerId) && !players.some((p) => p.id === profile.playerId))
+      readers.set(profile.playerId, profile.displayName || profile.character || profile.playerId);
+  for (const reveal of revelations)
+    if (!readers.has(reveal.playerId) && !players.some((p) => p.id === reveal.playerId))
+      readers.set(reveal.playerId, reveal.displayName || reveal.playerId);
   function submit(e: FormEvent) {
     e.preventDefault();
     setError('');
@@ -43,7 +67,16 @@ export function Editor({
       try {
         await service.saveInscription(
           item.id,
-          { title, languageId, text, unreadable, hideTitleFromPlayers, hideLanguageFromPlayers },
+          {
+            title,
+            languageId,
+            text,
+            unreadable,
+            hideTitleFromPlayers,
+            hideLanguageFromPlayers,
+            partialText,
+            revelations,
+          },
           openedScene,
         );
         onClose();
@@ -131,6 +164,72 @@ export function Editor({
         <p className="muted small">
           Si la dejas vacía, se generarán runas estables automáticamente.
         </p>
+        <details className="editor-section">
+          <summary>Traducción parcial</summary>
+          <p className="muted small">
+            Escribe las pistas legibles y encierra los fragmentos que seguirán siendo runas entre
+            dobles corchetes. Ejemplo: [[El rey]] regresa [[al norte]]. Solo la verán los jugadores
+            a los que asignes Traducción parcial abajo.
+          </p>
+          <label htmlFor="partial-text">Texto de traducción parcial</label>
+          <textarea
+            id="partial-text"
+            maxLength={12000}
+            rows={4}
+            value={partialText}
+            onChange={(e) => setPartialText(e.target.value)}
+            placeholder="[[Fragmento oculto]] palabras legibles [[otro secreto]]"
+          />
+          {partialText.trim() &&
+            (validPartial(partialText) ? (
+              <div className="partial-preview">
+                <p className="muted small">Vista previa de la traducción parcial</p>
+                <div className="reading partial-reading" data-testid="partial-preview">
+                  {partialReading(partialText, existing?.id ?? `runa:${item.id}`)}
+                </div>
+              </div>
+            ) : (
+              <p role="alert" className="error">
+                Cierra cada fragmento oculto con [[ y ]], sin anidar corchetes.
+              </p>
+            ))}
+        </details>
+        <details className="editor-section">
+          <summary>Revelación por jugador</summary>
+          <p className="muted small">
+            Concede lectura solo para esta inscripción. No cambia sus idiomas ni abre ventanas al
+            jugador. Quienes ya conocen el idioma conservan la lectura completa.
+          </p>
+          {[...readers].map(([id, name]) => (
+            <label key={id} className="revelation-row">
+              <span>
+                {name}
+                {!players.some((p) => p.id === id) ? ' · Desconectado' : ''}
+              </span>
+              <code>{id}</code>
+              <select
+                aria-label={`Revelación para ${name} (${id})`}
+                value={revelations.find((r) => r.playerId === id)?.mode ?? 'language'}
+                onChange={(e) => {
+                  const mode = e.target.value;
+                  setRevelations((current) => {
+                    const next = current.filter((r) => r.playerId !== id);
+                    if (mode === 'partial' || mode === 'full')
+                      next.push({ playerId: id, displayName: name, mode });
+                    return next;
+                  });
+                }}
+              >
+                <option value="language">Según sus idiomas</option>
+                <option value="partial">Traducción parcial</option>
+                <option value="full">Texto completo</option>
+              </select>
+            </label>
+          ))}
+          {readers.size === 0 && (
+            <p className="muted small">Los jugadores aparecerán al entrar a la sala.</p>
+          )}
+        </details>
         {error && (
           <p role="alert" className="error">
             {error}
@@ -157,6 +256,11 @@ export function Editor({
           Usar ejemplo de Aurill
         </button>
       </form>
+      <PrivateNote
+        key={`${roomId}:${player.id}:${item.id}`}
+        {...{ roomId, player, sceneToken: openedScene, service, run, busy }}
+        itemId={item.id}
+      />
       {existing && (
         <div className="remove-area">
           {confirmRemove ? (

@@ -86,6 +86,7 @@ export class DemoAdapter implements Adapter {
   async snapshot(): Promise<Snapshot> {
     const s = this.read();
     return {
+      roomId: 'demo-room',
       player: this.actor,
       players: DEMO_PLAYERS.filter((p) => this.connected.includes(p.id)),
       ready: this.loaded,

@@ -32,6 +32,17 @@ export const inscriptionSchema = z.object({
   unreadable: z.string().max(12000).optional(),
   hideTitleFromPlayers: z.boolean().optional(),
   hideLanguageFromPlayers: z.boolean().optional(),
+  partialText: z.string().max(12000).optional(),
+  revelations: z
+    .array(
+      z.object({
+        playerId: id,
+        displayName: z.string().max(100),
+        mode: z.enum(['partial', 'full']),
+      }),
+    )
+    .max(60)
+    .optional(),
 });
 export type Language = z.infer<typeof languageSchema>;
 export type Profile = z.infer<typeof profileSchema>;
@@ -51,6 +62,7 @@ export type Config = {
   warnings: string[];
 };
 export type Snapshot = {
+  roomId: string;
   player: Identity;
   players: Identity[];
   ready: boolean;
@@ -105,10 +117,32 @@ export function readConfig(room: Record<string, unknown>): Config {
 export function canRead(player: Identity, inscription: Inscription, config: Config) {
   return (
     player.role === 'GM' ||
+    inscription.revelations?.some((r) => r.playerId === player.id && r.mode === 'full') === true ||
     (config.languages.some((l) => l.id === inscription.languageId) &&
       config.profiles.some(
         (p) => p.playerId === player.id && p.languageIds.includes(inscription.languageId),
       ))
+  );
+}
+/** An explicit revelation adds access; it never removes a language the player already knows. */
+export function readingMode(player: Identity, inscription: Inscription, config: Config) {
+  if (canRead(player, inscription, config)) return 'full';
+  if (
+    inscription.partialText?.trim() &&
+    validPartial(inscription.partialText) &&
+    inscription.revelations?.some((r) => r.playerId === player.id && r.mode === 'partial')
+  )
+    return 'partial';
+  return 'runes';
+}
+/** Double brackets conceal a fragment. Unbalanced/nested markers never expose their contents. */
+export function validPartial(text: string) {
+  return !text.replace(/\[\[[^[\]]+\]\]/gu, '').match(/[[\]]/u);
+}
+export function partialReading(text: string, seed: string) {
+  if (!validPartial(text)) return runes(text, seed);
+  return text.replace(/\[\[([^[\]]+)\]\]/gu, (_, hidden: string, offset: number) =>
+    runes(hidden, `${seed}:${offset}`),
   );
 }
 export function inscriptionPresentation(player: Identity, inscription: Inscription) {
@@ -130,7 +164,8 @@ export function runes(text: string, seed: string): string {
   }).join('');
 }
 export function reading(player: Identity, inscription: Inscription, config: Config) {
-  return canRead(player, inscription, config)
-    ? inscription.text
-    : inscription.unreadable?.trim() || runes(inscription.text, inscription.id);
+  const mode = readingMode(player, inscription, config);
+  if (mode === 'full') return inscription.text;
+  if (mode === 'partial') return partialReading(inscription.partialText!, inscription.id);
+  return inscription.unreadable?.trim() || runes(inscription.text, inscription.id);
 }

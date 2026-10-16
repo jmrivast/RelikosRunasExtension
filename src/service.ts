@@ -1,4 +1,5 @@
 import type { Adapter } from './adapter';
+import { savePrivateNote } from './privateNotes';
 import {
   assertGM,
   inscriptionId,
@@ -10,6 +11,7 @@ import {
   PROFILE_PREFIX,
   SETTINGS_KEY,
   readConfig,
+  validPartial,
   type Inscription,
   type Language,
   type Profile,
@@ -17,6 +19,14 @@ import {
 } from './domain';
 export class RelikosService {
   constructor(private adapter: Adapter) {}
+  async saveNote(itemId: string, text: string, sceneToken: string, roomId: string) {
+    const s = await this.adapter.snapshot();
+    assertGM(s.player);
+    if (!s.ready || s.sceneToken !== sceneToken || s.roomId !== roomId)
+      throw new Error('La escena cambió. Vuelve a abrir el editor.');
+    if (!s.items.some((item) => item.id === itemId)) throw new Error('El objeto ya no existe.');
+    savePrivateNote({ roomId: s.roomId, player: s.player, itemId }, text);
+  }
   async saveInscription(
     itemId: string,
     input: Omit<Inscription, 'id' | 'version' | 'objectId'>,
@@ -34,6 +44,12 @@ export class RelikosService {
       id: inscriptionId(itemId),
       objectId: itemId,
     });
+    if (data.partialText && !validPartial(data.partialText))
+      throw new Error('Cierra cada fragmento oculto con [[ y ]], sin anidar corchetes.');
+    if (data.revelations?.some((r) => r.mode === 'partial') && !data.partialText?.trim())
+      throw new Error('Escribe una traducción parcial antes de asignarla a un jugador.');
+    if (new Set(data.revelations?.map((r) => r.playerId)).size !== (data.revelations?.length ?? 0))
+      throw new Error('Un jugador no puede tener dos revelaciones en la misma inscripción.');
     if (!readConfig(s.room).languages.some((l) => l.id === data.languageId))
       throw new Error('Selecciona un idioma válido.');
     await this.adapter.putInscription(itemId, data, sceneToken);

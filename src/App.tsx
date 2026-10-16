@@ -178,8 +178,11 @@ export function App({ adapter }: { adapter: Adapter }) {
           ) : navigation.view === 'edit' ? (
             gm ? (
               <Editor
-                key={item.id}
+                key={`${snapshot.roomId}:${snapshot.sceneToken}:${item.id}`}
                 {...{ item, config, service, run, busy }}
+                roomId={snapshot.roomId}
+                player={snapshot.player}
+                players={snapshot.players}
                 existing={inscription}
                 sceneToken={snapshot.sceneToken}
                 onClose={close}

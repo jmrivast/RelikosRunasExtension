@@ -45,8 +45,13 @@ Namespace: `com.relikos.runas-antiguas`.
 | Sala | `/language/{id}` | `{version,id,name}` |
 | Sala | `/player/{playerId}` | `{version,playerId,displayName,character,languageIds}` |
 | Sala | `/settings` | `{version,fontSize,animate}` |
+| Navegador del DM | `/private-note/[roomId,playerId,itemId]` | Nota local de texto; nunca entra al transporte compartido |
 
 Cada clave anterior lleva el namespace completo como prefijo. Las escrituras no reenvían el conjunto de metadatos: solo parchean una clave propia. El borrado de una inscripción elimina únicamente esa propiedad del objeto. Los perfiles se separan por ID para que guardar a un jugador no sobrescriba a otro.
+
+Desde 1.3.0, el objeto admite los campos opcionales `hideTitleFromPlayers`, `hideLanguageFromPlayers`, `partialText` y `revelations: [{playerId,displayName,mode: 'partial'|'full'}]`, compatibles con registros anteriores. La lectura completa del GM, por idioma o por revelación completa tiene prioridad; después se evalúa una revelación parcial válida y, en último lugar, la escritura indescifrable. Las concesiones son aditivas y se identifican por cuenta, nunca por nombre. El servicio valida destinatarios únicos y plantillas completas antes de escribir.
+
+Los fragmentos entre `[[` y `]]` en `partialText` se sustituyen por runas deterministas; texto mal formado falla cerrado. El lector utiliza texto de React, sin interpretar HTML. Las notas privadas se guardan mediante `privateNotes.ts`, bajo una clave local compuesta por `OBR.room.id`, ID del DM e ID real del objeto. La escritura revalida rol, sala, escena y existencia del objeto. Si el almacenamiento está bloqueado o lleno, el editor muestra el fallo sin marcar la nota como guardada. No hay sincronización entre dispositivos; no se envían las notas al SDK. No constituyen una bóveda cifrada frente a personas con acceso al mismo perfil del navegador.
 
 Telikari antiguo es el valor inicial mientras no haya entrada explícita; se persiste al renombrarlo/guardarlo. Los perfiles siempre se almacenan por ID, nunca por el nombre o por `connectionId`. El ID identifica a la cuenta y se conserva al reconectar con esa misma cuenta; invitado, cuenta distinta, otra sala o datos borrados requieren revisar la asignación. No se promete identidad entre cuentas.
 

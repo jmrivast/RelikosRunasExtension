@@ -19,6 +19,7 @@ const sdk = vi.hoisted(() => {
       },
       party: { getPlayers: vi.fn(async () => []), onChange: subscribe },
       room: {
+        id: 'room-a',
         getMetadata: vi.fn(async () => ({ foreign: 42 })),
         setMetadata: vi.fn(),
         onMetadataChange: subscribe,

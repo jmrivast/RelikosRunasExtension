@@ -602,6 +602,34 @@ html[data-surface='modal'] dialog::backdrop {
 .editor textarea {
   font-size: 16px;
 }
+.editor-section {
+  border-top: 1px solid #70624a70;
+  padding: 18px 0;
+}
+.editor-section summary {
+  color: var(--gold);
+  cursor: pointer;
+  line-height: 1.5;
+}
+.editor-section[open] summary {
+  margin-bottom: 16px;
+}
+.revelation-row {
+  padding-bottom: 14px;
+  border-bottom: 1px solid #70624a40;
+  overflow-wrap: anywhere;
+}
+.revelation-row code {
+  margin: 0;
+}
+.partial-preview {
+  border: 1px solid #70624a70;
+  padding: 16px;
+  background: #090d1060;
+}
+.partial-reading {
+  font-family: Georgia, 'Relikos Runes', 'Segoe UI Historic', serif;
+}
 .remove-area {
   border-top: 1px solid #70624a70;
   margin-top: 22px;

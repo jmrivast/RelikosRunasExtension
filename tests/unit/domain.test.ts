@@ -12,6 +12,9 @@ import {
   readConfig,
   readInscription,
   reading,
+  readingMode,
+  partialReading,
+  validPartial,
   runes,
   SAMPLE,
   SETTINGS_KEY,
@@ -40,6 +43,56 @@ const room = {
   },
 };
 describe('identidad y permisos', () => {
+  it('revela una inscripción al ID elegido sin conceder el idioma ni otras inscripciones', () => {
+    const config = readConfig(room);
+    const revealed: Inscription = {
+      ...inscription,
+      revelations: [{ playerId: other.id, displayName: 'Otro', mode: 'full' }],
+    };
+    expect(reading(other, revealed, config)).toBe(SAMPLE.text);
+    expect(canRead(other, inscription, config)).toBe(false);
+    expect(canRead({ ...other, id: 'otra-cuenta' }, revealed, config)).toBe(false);
+    expect(readingMode({ ...other, name: 'Nombre nuevo' }, revealed, config)).toBe('full');
+    expect(readingMode(other, { ...revealed, revelations: [] }, config)).toBe('runes');
+  });
+  it('muestra únicamente las pistas parciales al jugador elegido y conserva la lectura por idioma', () => {
+    const partial: Inscription = {
+      ...inscription,
+      partialText: '[[El rey]] regresa [[al norte]]',
+      revelations: [
+        { playerId: other.id, displayName: 'Otro', mode: 'partial' },
+        { playerId: basili.id, displayName: 'Basili', mode: 'partial' },
+      ],
+    };
+    const result = reading(other, partial, readConfig(room));
+    expect(result).toContain('regresa');
+    expect(result).not.toMatch(/El rey|al norte|\[|\]/u);
+    expect(readingMode(other, partial, readConfig(room))).toBe('partial');
+    expect(reading(basili, partial, readConfig(room))).toBe(SAMPLE.text);
+    expect(reading(gm, partial, readConfig(room))).toBe(SAMPLE.text);
+    expect(readingMode({ ...other, id: 'x' }, partial, readConfig(room))).toBe('runes');
+    expect(readingMode(other, { ...partial, partialText: '' }, readConfig(room))).toBe('runes');
+  });
+  it('una plantilla parcial mal formada nunca filtra fragmentos ocultos', () => {
+    for (const text of ['[[secreto', 'secreto]]', '[[exterior [[interior]]]]', '[[]]']) {
+      expect(validPartial(text)).toBe(false);
+      expect(partialReading(text, 'id')).not.toMatch(/[a-z]/u);
+      expect(
+        readingMode(
+          other,
+          {
+            ...inscription,
+            partialText: text,
+            revelations: [{ playerId: other.id, displayName: '', mode: 'partial' }],
+          },
+          readConfig(room),
+        ),
+      ).toBe('runes');
+    }
+    expect(validPartial('[[oculto\n😀]] pista [[otro]]')).toBe(true);
+    expect(partialReading('[[oculto\n😀]] pista [[otro]]', 'id')).toContain('\n');
+    expect(partialReading('[[oculto]] pista', 'id')).toBe(partialReading('[[oculto]] pista', 'id'));
+  });
   it('autoriza por ID persistente, nunca por el nombre visible', () => {
     expect(canRead(basili, inscription, readConfig(room))).toBe(true);
     expect(canRead(other, inscription, readConfig(room))).toBe(false);

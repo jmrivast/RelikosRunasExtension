@@ -17,6 +17,7 @@ let adapter: Adapter;
 let service: RelikosService;
 beforeEach(() => {
   snapshot = {
+    roomId: 'room-a',
     player: { id: 'dm', name: 'DM', role: 'GM' },
     players: [],
     ready: true,
@@ -47,6 +48,34 @@ beforeEach(() => {
   service = new RelikosService(adapter);
 });
 describe('operaciones autorizadas y persistencia', () => {
+  it('guarda revelaciones y rechaza plantillas inválidas, parciales vacías y destinatarios repetidos', async () => {
+    const reveal = { playerId: 'b', displayName: 'B', mode: 'partial' as const };
+    const data = { ...SAMPLE, partialText: '[[Un secreto]] pista', revelations: [reveal] };
+    await service.saveInscription('obj', data, 'scene-a');
+    expect(readInscription(snapshot.items[0])).toMatchObject(data);
+    for (const input of [
+      { ...data, partialText: '[[Abierto' },
+      { ...data, partialText: '' },
+      { ...data, revelations: [reveal, reveal] },
+    ])
+      await expect(service.saveInscription('obj', input, 'scene-a')).rejects.toThrow();
+    expect(readInscription(snapshot.items[0])).toMatchObject(data);
+  });
+  it('rechaza guardar notas si cambió la sala, la escena, el rol o se eliminó el objeto', async () => {
+    await expect(service.saveNote('obj', 'Privado', 'scene-a', 'otra-sala')).rejects.toThrow(
+      /escena/,
+    );
+    await expect(service.saveNote('obj', 'Privado', 'old-scene', 'room-a')).rejects.toThrow(
+      /escena/,
+    );
+    await expect(service.saveNote('missing', 'Privado', 'scene-a', 'room-a')).rejects.toThrow(
+      /objeto/,
+    );
+    snapshot.player.role = 'PLAYER';
+    await expect(service.saveNote('obj', 'Privado', 'scene-a', 'room-a')).rejects.toThrow(
+      /Dungeon Master/,
+    );
+  });
   it('guarda y actualiza sin tocar metadatos de otras extensiones', async () => {
     await service.saveInscription('obj', SAMPLE, 'scene-a');
     await service.saveInscription('obj', { ...SAMPLE, text: 'Nuevo texto' }, 'scene-a');

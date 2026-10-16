@@ -1,5 +1,5 @@
 import {
-  canRead,
+  readingMode,
   inscriptionPresentation,
   reading,
   type Config,
@@ -17,7 +17,7 @@ export function Reader({
   player: Identity;
   onClose: () => void;
 }) {
-  const known = canRead(player, inscription, config);
+  const mode = readingMode(player, inscription, config);
   const presentation = inscriptionPresentation(player, inscription);
   return (
     <article
@@ -41,13 +41,25 @@ export function Reader({
         ◇
       </div>
       <div
-        className={`reading ${known ? '' : 'runes'}`}
+        className={`reading ${mode === 'runes' ? 'runes' : mode === 'partial' ? 'partial-reading' : ''}`}
         data-testid="reading"
-        aria-label={known ? 'Texto de la inscripción' : 'Escritura indescifrable'}
+        aria-label={
+          mode === 'full'
+            ? 'Texto de la inscripción'
+            : mode === 'partial'
+              ? 'Traducción parcial'
+              : 'Escritura indescifrable'
+        }
       >
         {reading(player, inscription, config)}
       </div>
-      {!known && <p className="unreadable-hint">No comprendes esta escritura.</p>}
+      {mode !== 'full' && (
+        <p className="unreadable-hint">
+          {mode === 'partial'
+            ? 'Solo comprendes algunos fragmentos.'
+            : 'No comprendes esta escritura.'}
+        </p>
+      )}
       <footer>
         <button onClick={onClose}>Cerrar</button>
       </footer>
