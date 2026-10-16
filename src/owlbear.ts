@@ -1,6 +1,16 @@
 import OBR from '@owlbear-rodeo/sdk';
 import type { Adapter, Navigation } from './adapter';
-import { assertGM, INSCRIPTION_KEY, NS, type Inscription, type Snapshot } from './domain';
+import {
+  assertGM,
+  INSCRIPTION_KEY,
+  TOKEN_PLAYER_KEY,
+  LOCAL_RUNE_KEY,
+  NS,
+  readInscription,
+  type Inscription,
+  type Snapshot,
+} from './domain';
+import { canAccessItem, isCharacterToken, tokenPlayer } from './proximity';
 export const MODAL_ID = `${NS}/modal`;
 export class OwlbearAdapter implements Adapter {
   demo = false;
@@ -36,6 +46,26 @@ export class OwlbearAdapter implements Adapter {
       OBR.room.getMetadata(),
     ]);
     const items = ready ? await OBR.scene.items.getItems() : [];
+    let grid: Snapshot['grid'];
+    const centres = new Map<string, { x: number; y: number }>();
+    if (ready && items.some((item) => readInscription(item)?.proximity)) {
+      const [dpi, scale] = await Promise.all([OBR.scene.grid.getDpi(), OBR.scene.grid.getScale()]);
+      const unit = scale.parsed.unit.toLowerCase().trim();
+      const conversion = ['ft', 'feet', 'foot', 'pies', 'pie', "'"].includes(unit)
+        ? 1
+        : ['m', 'meter', 'meters', 'metre', 'metres', 'metro', 'metros'].includes(unit)
+          ? 1 / 0.3048
+          : NaN;
+      grid = { dpi, feetPerCell: scale.parsed.multiplier * conversion };
+      await Promise.all(
+        items
+          .filter((item) => readInscription(item)?.proximity || tokenPlayer(item))
+          .map(async (item) => {
+            const bounds = await OBR.scene.items.getItemBounds([item.id]);
+            centres.set(item.id, bounds.center);
+          }),
+      );
+    }
     if (epoch !== this.epoch) return this.snapshot();
     return {
       roomId: OBR.room.id,
@@ -51,7 +81,8 @@ export class OwlbearAdapter implements Adapter {
       ready,
       selection: selection ?? [],
       room,
-      items,
+      items: items.map((item) => ({ ...item, center: centres.get(item.id) })),
+      grid,
       sceneToken: String(epoch),
     };
   }
@@ -62,6 +93,7 @@ export class OwlbearAdapter implements Adapter {
       OBR.party.onChange(listener),
       OBR.room.onMetadataChange(listener),
       OBR.scene.items.onChange(listener),
+      OBR.scene.grid.onChange(listener),
     ];
     return () => {
       this.readyListeners.delete(listener);
@@ -82,8 +114,36 @@ export class OwlbearAdapter implements Adapter {
     await OBR.scene.items.updateItems([itemId], (draft) => {
       if (sceneToken !== String(this.epoch)) throw new Error('La escena cambió.');
       for (const item of draft) {
-        if (value) item.metadata[INSCRIPTION_KEY] = value;
-        else delete item.metadata[INSCRIPTION_KEY];
+        const previous = readInscription(item);
+        if (value) {
+          item.metadata[INSCRIPTION_KEY] = value;
+          if (value.proximity) item.visible = false;
+          else if (previous?.proximity) item.visible = previous.proximity.restoreVisible;
+        } else {
+          delete item.metadata[INSCRIPTION_KEY];
+          if (previous?.proximity) item.visible = previous.proximity.restoreVisible;
+        }
+      }
+    });
+  }
+  async assignToken(playerId: string, itemId: string | null, sceneToken: string) {
+    const snapshot = await this.snapshot();
+    assertGM(snapshot.player);
+    if (!snapshot.ready || snapshot.sceneToken !== sceneToken) throw new Error('La escena cambió.');
+    const target = snapshot.items.find((item) => item.id === itemId);
+    if (itemId && (!target || !isCharacterToken(target)))
+      throw new Error('Selecciona un token de personaje de esta escena.');
+    if (target && tokenPlayer(target) && tokenPlayer(target) !== playerId)
+      throw new Error('Ese token ya pertenece a otro jugador en Relikos.');
+    const ids = snapshot.items
+      .filter((item) => tokenPlayer(item) === playerId || item.id === itemId)
+      .map((item) => item.id);
+    if (!ids.length) return;
+    await OBR.scene.items.updateItems(ids, (draft) => {
+      if (sceneToken !== String(this.epoch)) throw new Error('La escena cambió.');
+      for (const item of draft) {
+        if (item.id === itemId) item.metadata[TOKEN_PLAYER_KEY] = playerId;
+        else delete item.metadata[TOKEN_PLAYER_KEY];
       }
     });
   }
@@ -91,6 +151,12 @@ export class OwlbearAdapter implements Adapter {
     return (await OBR.player.getSelection()) ?? [];
   }
   async open({ view, itemId }: Navigation) {
+    if (view === 'read') {
+      const snapshot = await this.snapshot();
+      const item = snapshot.items.find((i) => i.id === itemId && !i.metadata[LOCAL_RUNE_KEY]);
+      if (!item || !readInscription(item) || !canAccessItem(snapshot, item))
+        throw new Error('La inscripción no está disponible desde tu posición.');
+    }
     const height = await OBR.viewport.getHeight();
     await OBR.modal.open({
       id: MODAL_ID,

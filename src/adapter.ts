@@ -6,6 +6,7 @@ export interface Adapter {
   subscribe(listener: () => void): () => void;
   patchRoom(patch: Record<string, unknown>): Promise<void>;
   putInscription(itemId: string, value: Inscription | null, sceneToken: string): Promise<void>;
+  assignToken(playerId: string, itemId: string | null, sceneToken: string): Promise<void>;
   selected(): Promise<string[]>;
   open(view: Navigation): Promise<void>;
   close(): Promise<void>;

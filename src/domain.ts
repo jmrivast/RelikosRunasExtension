@@ -4,6 +4,8 @@ export const INSCRIPTION_KEY = `${NS}/inscription`;
 export const SETTINGS_KEY = `${NS}/settings`;
 export const LANGUAGE_PREFIX = `${NS}/language/`;
 export const PROFILE_PREFIX = `${NS}/player/`;
+export const TOKEN_PLAYER_KEY = `${NS}/token-player`;
+export const LOCAL_RUNE_KEY = `${NS}/local-rune`;
 const id = z.string().min(1).max(180);
 export const languageSchema = z.object({
   version: z.literal(1),
@@ -32,6 +34,7 @@ export const inscriptionSchema = z.object({
   unreadable: z.string().max(12000).optional(),
   hideTitleFromPlayers: z.boolean().optional(),
   hideLanguageFromPlayers: z.boolean().optional(),
+  proximity: z.object({ radiusFeet: z.literal(10), restoreVisible: z.boolean() }).optional(),
   partialText: z.string().max(12000).optional(),
   revelations: z
     .array(
@@ -54,6 +57,10 @@ export type MapItem = {
   name: string;
   visible: boolean;
   metadata: Record<string, unknown>;
+  type?: string;
+  layer?: string;
+  position?: { x: number; y: number };
+  center?: { x: number; y: number };
 };
 export type Config = {
   languages: Language[];
@@ -70,6 +77,7 @@ export type Snapshot = {
   selection: string[];
   room: Record<string, unknown>;
   sceneToken: string;
+  grid?: { dpi: number; feetPerCell: number };
 };
 export const TELIKARI: Language = { version: 1, id: 'telikari-antiguo', name: 'Telikari antiguo' };
 export const DEFAULT_SETTINGS: Settings = { version: 1, fontSize: 19, animate: true };

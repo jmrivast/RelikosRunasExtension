@@ -606,6 +606,52 @@ html[data-surface='modal'] dialog::backdrop {
   border-top: 1px solid #70624a70;
   padding: 18px 0;
 }
+.demo-map {
+  max-width: 680px;
+  margin: 12px auto;
+  padding: 12px 18px;
+  border: 1px dashed var(--line);
+}
+.demo-map-stage {
+  height: 160px;
+  position: relative;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent calc(12.5% - 1px),
+      #70624a55 calc(12.5% - 1px),
+      #70624a55 12.5%
+    ),
+    #182421;
+}
+.demo-token,
+.demo-rune {
+  position: absolute;
+  top: 40%;
+  transform: translateX(-50%);
+}
+.demo-token {
+  text-align: center;
+  color: var(--ice);
+}
+.demo-token small {
+  display: block;
+}
+.demo-rune {
+  padding: 6px;
+  top: 20%;
+}
+.demo-rune img {
+  width: 25px;
+  height: 40px;
+}
+@media (max-width: 520px) {
+  .demo-map {
+    margin: 8px;
+  }
+}
 .editor-section summary {
   color: var(--gold);
   cursor: pointer;

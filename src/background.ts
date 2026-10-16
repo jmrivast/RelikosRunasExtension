@@ -1,6 +1,8 @@
 import OBR from '@owlbear-rodeo/sdk';
 import { NS, INSCRIPTION_KEY, readInscription } from './domain';
 import { OwlbearAdapter } from './owlbear';
+import { startProximity, sourceId } from './proximity';
+import { OwlbearLocalRunes } from './localRunes';
 
 /** Only this persistent iframe registers object menus; panels and readers never do. */
 export async function registerInteractions(adapter: OwlbearAdapter) {
@@ -31,7 +33,7 @@ export async function registerInteractions(adapter: OwlbearAdapter) {
       ],
       onClick(context) {
         const item = context.items[0];
-        if (item && readInscription(item)) open('read', item.id);
+        if (item && readInscription(item)) open('read', sourceId(item));
       },
     });
     await OBR.contextMenu.create({
@@ -62,17 +64,26 @@ if (OBR.isAvailable) {
   OBR.onReady(() => {
     const adapter = new OwlbearAdapter();
     let cleanup: (() => Promise<unknown>) | undefined;
+    let stopProximity: (() => Promise<void>) | undefined;
     let disposed = false;
-    void registerInteractions(adapter)
+    void adapter
+      .ready()
+      .then(() => registerInteractions(adapter))
       .then((stop) => {
         if (disposed) void stop();
-        else cleanup = stop;
+        else {
+          cleanup = stop;
+          stopProximity = startProximity(adapter, new OwlbearLocalRunes(), (error) => {
+            void OBR.notification.show(`Relikos: ${String(error)}`, 'ERROR');
+          });
+        }
       })
       .catch((error) => {
         void OBR.notification.show(String(error), 'ERROR');
       });
     const dispose = () => {
       disposed = true;
+      void stopProximity?.().catch(() => {});
       adapter.dispose();
       void cleanup?.();
     };

@@ -1,7 +1,93 @@
 import { useState, type FormEvent } from 'react';
-import type { Config, Identity, Profile } from '../domain';
+import type { Config, Identity, Profile, Snapshot } from '../domain';
+import { isCharacterToken, tokenPlayer } from '../proximity';
 import type { RelikosService } from '../service';
 import type { Run } from '../types';
+function TokenAssignment({
+  player,
+  snapshot,
+  service,
+  run,
+  busy,
+}: {
+  player: Identity;
+  snapshot: Snapshot;
+  service: RelikosService;
+  run: Run;
+  busy: boolean;
+}) {
+  const tokens = snapshot.items.filter(isCharacterToken);
+  const assigned = tokens.find((token) => tokenPlayer(token) === player.id)?.id ?? '';
+  return (
+    <TokenChoice
+      key={`${snapshot.sceneToken}:${assigned}`}
+      {...{ player, snapshot, service, run, busy, tokens, assigned }}
+    />
+  );
+}
+function TokenChoice({
+  player,
+  snapshot,
+  service,
+  run,
+  busy,
+  tokens,
+  assigned,
+}: {
+  player: Identity;
+  snapshot: Snapshot;
+  service: RelikosService;
+  run: Run;
+  busy: boolean;
+  tokens: Snapshot['items'];
+  assigned: string;
+}) {
+  const [chosen, setChosen] = useState(assigned);
+  return (
+    <fieldset>
+      <legend>Token para proximidad · escena actual</legend>
+      <label>
+        Token de {player.name}
+        <select
+          aria-label={`Token de ${player.name}`}
+          value={chosen}
+          disabled={!snapshot.ready || busy}
+          onChange={(e) => setChosen(e.target.value)}
+        >
+          <option value="">Sin token asignado</option>
+          {tokens.map((token) => (
+            <option
+              key={token.id}
+              value={token.id}
+              disabled={!!tokenPlayer(token) && tokenPlayer(token) !== player.id}
+            >
+              {token.name} · {token.id}
+              {tokenPlayer(token) && tokenPlayer(token) !== player.id
+                ? ' · Asignado a otra cuenta'
+                : ''}
+            </option>
+          ))}
+        </select>
+      </label>
+      <p className="muted small">
+        Elige una imagen de la capa Personaje. La asignación pertenece a esta escena y no cambia sus
+        idiomas.
+      </p>
+      <button
+        type="button"
+        disabled={!snapshot.ready || busy}
+        onClick={() => {
+          void run(
+            () => service.assignToken(player.id, chosen || null, snapshot.sceneToken),
+            'Token de proximidad guardado.',
+          );
+        }}
+      >
+        Guardar token de {player.name}
+      </button>
+    </fieldset>
+  );
+}
 function ProfileForm({
   player,
   profile,
@@ -10,6 +96,7 @@ function ProfileForm({
   service,
   run,
   busy,
+  snapshot,
 }: {
   player: Identity;
   profile: Profile | undefined;
@@ -18,6 +105,7 @@ function ProfileForm({
   service: RelikosService;
   run: Run;
   busy: boolean;
+  snapshot: Snapshot;
 }) {
   const [character, setCharacter] = useState(profile?.character ?? '');
   const [languageIds, setLanguageIds] = useState(profile?.languageIds ?? []);
@@ -68,6 +156,7 @@ function ProfileForm({
           </label>
         ))}
       </fieldset>
+      <TokenAssignment {...{ player, snapshot, service, run, busy }} />
       <div className="actions">
         <button className="primary" disabled={busy}>
           Guardar jugador
@@ -94,12 +183,14 @@ export function PlayersPanel({
   service,
   run,
   busy,
+  snapshot,
 }: {
   config: Config;
   players: Identity[];
   service: RelikosService;
   run: Run;
   busy: boolean;
+  snapshot: Snapshot;
 }) {
   const all = new Map(players.map((p) => [p.id, p]));
   config.profiles.forEach((p) => {
@@ -124,7 +215,7 @@ export function PlayersPanel({
           return (
             <ProfileForm
               key={player.id + JSON.stringify(profile)}
-              {...{ player, profile, config, service, run, busy }}
+              {...{ player, profile, config, service, run, busy, snapshot }}
               online={players.some((p) => p.id === player.id)}
             />
           );

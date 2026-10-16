@@ -85,6 +85,19 @@ En **Traducción parcial**, escribe las pistas legibles y encierra los fragmento
 
 Los campos nuevos son opcionales dentro del esquema v1: las inscripciones anteriores funcionan sin migración y sin cambios de permisos hasta que el DM configure una revelación.
 
+## Descubrimiento individual a menos de 10 pies (1.4.0)
+
+1. En **Jugadores**, el DM elige el **Token de cada jugador** y pulsa **Guardar token**. Debe ser una imagen de la capa **Personaje** de la escena actual. La cuenta se identifica por ID; no se deduce por quién importó la imagen ni por el nombre del personaje. Un token se asigna a una cuenta; cambiar la asignación retira la anterior de esa cuenta en esta escena.
+2. En **Editar inscripción**, activa **Ocultar y permitir leer solo a menos de 10 pies** y guarda. La imagen original se oculta para jugadores en la misma escritura que guarda la configuración. El DM sigue viéndola y puede editarla.
+3. Cuando el centro del token asignado esté a **menos de 10 pies** del centro de la runa, la extensión crea una copia local solo para ese jugador. A exactamente 10 pies todavía no aparece. La lectura se abre desde el menú del objeto local y conserva las reglas de idioma, revelaciones y ocultación de título/idioma. Acercarse no abre una ventana automáticamente.
+4. Al alejarse, perder el token asignado o cambiar su asignación, desaparece su copia y se cierra su lectura. Abrir una URL del lector tampoco permite saltarse el control de distancia. Recargar reconstruye las copias válidas.
+
+La distancia es un radio en línea recta entre centros, independiente del zoom y de la regla de diagonales. Usa DPI y escala de la escena; admite pies y metros (convertidos a pies). Una escala desconocida o un token no asignado/oculto falla cerrado. **No comprueba paredes, obstáculos ni línea de visión**. Las copias no se comparten con otros usuarios y se limpian sin borrar objetos locales de otras extensiones.
+
+Desactivar la opción o desvincular la inscripción restaura el estado de visibilidad que tenía antes de activar proximidad. Las inscripciones anteriores permanecen sin esta restricción hasta que el DM la active. Los tokens se asignan por escena: otra escena necesita sus propias asignaciones. Duplicar un token copia sus metadatos de cuenta; si hay varias copias asignadas a la misma cuenta, cualquiera de esos tokens visibles puede acercarse a la runa. Para reasignar un solo token, usa el selector del DM.
+
+En desarrollo, `?demo=1&proximityDemo=1` añade un mapa simulado con controles de distancia para verificar el umbral y las cuentas. Este mapa y sus controles no se incluyen en producción.
+
 ## Añadir idiomas y ajustar la lectura
 
 En **Idiomas**, crea una lengua, renómbrala conservando su ID y usa **Asignar lectores** para abrir Jugadores. El DM permanece autorizado a todas. En **Configuración** ajusta tamaño del texto y animación; los valores se guardan para la sala y todas sus escenas. Las preferencias del dispositivo de movimiento reducido tienen prioridad.

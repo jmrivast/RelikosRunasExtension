@@ -29,11 +29,27 @@ const sdk = vi.hoisted(() => {
         onReadyChange: vi.fn(() => stop),
         items: {
           getItems: vi.fn(async () => [
-            { id: 'obj', name: 'Runa', visible: true, metadata: { foreign: 42 } },
+            {
+              id: 'obj',
+              name: 'Runa',
+              visible: true,
+              metadata: {
+                foreign: 42,
+                'com.relikos.runas-antiguas/inscription': {
+                  version: 1,
+                  id: 'runa:obj',
+                  objectId: 'obj',
+                  title: 'Runa',
+                  languageId: 'telikari-antiguo',
+                  text: 'Texto',
+                },
+              },
+            },
           ]),
           onChange: subscribe,
           updateItems: vi.fn(),
         },
+        grid: { onChange: subscribe },
       },
       contextMenu: { create: vi.fn(), remove: vi.fn() },
       tool: { create: vi.fn(), createMode: vi.fn(), remove: vi.fn(), removeMode: vi.fn() },
@@ -115,7 +131,7 @@ describe('contratos del adaptador SDK real (transporte simulado)', () => {
     expect(sdk.default.scene.onReadyChange).toHaveBeenCalledOnce();
     stop();
     adapter.dispose();
-    expect(sdk.stop).toHaveBeenCalledTimes(5);
+    expect(sdk.stop).toHaveBeenCalledTimes(6);
   });
   it('filtra lectura por metadatos propios y restringe configuración al GM', async () => {
     const adapter = new OwlbearAdapter();

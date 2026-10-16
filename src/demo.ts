@@ -8,11 +8,14 @@ import {
   TELIKARI,
   SAMPLE,
   inscriptionId,
+  TOKEN_PLAYER_KEY,
+  readInscription,
   type Snapshot,
   type Inscription,
   type Identity,
   type MapItem,
 } from './domain';
+import { canAccessItem, isCharacterToken, tokenPlayer } from './proximity';
 const KEY = `${NS}/demo-v1`;
 const CHANGE = 'relikos:demo-change';
 export const DEMO_PLAYERS: Identity[] = [
@@ -39,6 +42,9 @@ function initial(): Store {
           id: 'rune-aurill',
           name: 'Runa en la pared',
           visible: true,
+          type: 'IMAGE',
+          layer: 'PROP',
+          position: { x: 0, y: 0 },
           metadata: {
             [INSCRIPTION_KEY]: {
               ...SAMPLE,
@@ -52,7 +58,28 @@ function initial(): Store {
           id: 'rune-blank',
           name: 'Runa sin configurar',
           visible: true,
+          type: 'IMAGE',
+          layer: 'PROP',
+          position: { x: 400, y: 0 },
           metadata: { 'other.extension/value': 42 },
+        },
+        {
+          id: 'token-basili',
+          name: 'Basili',
+          type: 'IMAGE',
+          layer: 'CHARACTER',
+          visible: true,
+          position: { x: 400, y: 0 },
+          metadata: {},
+        },
+        {
+          id: 'token-other',
+          name: 'Otro personaje',
+          type: 'IMAGE',
+          layer: 'CHARACTER',
+          visible: true,
+          position: { x: 600, y: 0 },
+          metadata: {},
         },
       ],
       b: [],
@@ -94,6 +121,7 @@ export class DemoAdapter implements Adapter {
       selection: this.selection,
       room: s.room,
       sceneToken: this.scene,
+      grid: { dpi: 100, feetPerCell: 5 },
     };
   }
   subscribe(listener: () => void) {
@@ -115,14 +143,50 @@ export class DemoAdapter implements Adapter {
     const s = this.read();
     const item = s.scenes[this.scene].find((i) => i.id === itemId);
     if (!item) throw new Error('El objeto ya no existe.');
-    if (value) item.metadata[INSCRIPTION_KEY] = value;
-    else delete item.metadata[INSCRIPTION_KEY];
+    const previous = readInscription(item);
+    if (value) {
+      item.metadata[INSCRIPTION_KEY] = value;
+      if (value.proximity) item.visible = false;
+      else if (previous?.proximity) item.visible = previous.proximity.restoreVisible;
+    } else {
+      delete item.metadata[INSCRIPTION_KEY];
+      if (previous?.proximity) item.visible = previous.proximity.restoreVisible;
+    }
     this.write(s);
+  }
+  async assignToken(playerId: string, itemId: string | null, sceneToken: string) {
+    assertGM(this.actor);
+    if (!this.loaded || sceneToken !== this.scene) throw new Error('La escena cambió.');
+    const store = this.read();
+    const target = store.scenes[this.scene].find((item) => item.id === itemId);
+    if (itemId && (!target || !isCharacterToken(target)))
+      throw new Error('Selecciona un token de personaje.');
+    if (target && tokenPlayer(target) && tokenPlayer(target) !== playerId)
+      throw new Error('Ese token ya pertenece a otro jugador.');
+    for (const item of store.scenes[this.scene]) {
+      if (item.id === itemId) item.metadata[TOKEN_PLAYER_KEY] = playerId;
+      else if (tokenPlayer(item) === playerId) delete item.metadata[TOKEN_PLAYER_KEY];
+    }
+    this.write(store);
+  }
+  moveToken(itemId: string, feet: number) {
+    assertGM(this.actor);
+    const store = this.read();
+    const item = store.scenes[this.scene].find((item) => item.id === itemId);
+    if (!item || !isCharacterToken(item)) throw new Error('Token no disponible.');
+    item.position = { x: feet * 20, y: 0 };
+    this.write(store);
   }
   async selected() {
     return this.selection;
   }
   async open(value: Navigation) {
+    if (value.view === 'read') {
+      const snapshot = await this.snapshot();
+      const item = snapshot.items.find((item) => item.id === value.itemId);
+      if (!item || !readInscription(item) || !canAccessItem(snapshot, item))
+        throw new Error('La inscripción no está disponible desde tu posición.');
+    }
     this.navigate(value);
   }
   async close() {

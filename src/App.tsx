@@ -12,6 +12,8 @@ import { SettingsPanel } from './components/SettingsPanel';
 import { InscriptionsPanel } from './components/InscriptionsPanel';
 import type { DemoAdapter } from './demo';
 import type { Run } from './types';
+import { canAccessItem } from './proximity';
+import { DemoMap } from './components/DemoMap';
 const tabs = ['Inscripciones', 'Jugadores', 'Idiomas', 'Configuración'] as const;
 export function App({ adapter }: { adapter: Adapter }) {
   const { snapshot, error: loadError } = useSession(adapter);
@@ -48,6 +50,19 @@ export function App({ adapter }: { adapter: Adapter }) {
       setBusy(false);
     }
   }, []);
+  const readingSource =
+    snapshot && navigation?.view === 'read'
+      ? snapshot.items.find((i) => i.id === navigation.itemId)
+      : undefined;
+  const lostProximity = !!(
+    snapshot &&
+    readingSource &&
+    readInscription(readingSource)?.proximity &&
+    !canAccessItem(snapshot, readingSource)
+  );
+  useEffect(() => {
+    if (lostProximity) close();
+  }, [lostProximity, close]);
   if (!snapshot)
     return (
       <main className="shell">
@@ -59,7 +74,7 @@ export function App({ adapter }: { adapter: Adapter }) {
   const config = readConfig(snapshot.room);
   const gm = snapshot.player.role === 'GM';
   const item = navigation
-    ? snapshot.items.find((i) => i.id === navigation.itemId && (gm || i.visible))
+    ? snapshot.items.find((i) => i.id === navigation.itemId && (gm || canAccessItem(snapshot, i)))
     : undefined;
   const inscription = item ? readInscription(item) : null;
   const surface = document.documentElement.dataset.surface;
@@ -98,6 +113,10 @@ export function App({ adapter }: { adapter: Adapter }) {
           )}
         </aside>
       )}
+      {import.meta.env.DEV &&
+        adapter.demo &&
+        surface === 'standalone' &&
+        params.get('proximityDemo') === '1' && <DemoMap adapter={demo} snapshot={snapshot} />}
       {!routeModal &&
         (gm ? (
           <main className="shell">
@@ -141,7 +160,9 @@ export function App({ adapter }: { adapter: Adapter }) {
               {gm && tab === 'Inscripciones' && (
                 <InscriptionsPanel {...{ snapshot, config, adapter, run, busy }} />
               )}
-              {gm && tab === 'Jugadores' && <PlayersPanel {...shared} players={snapshot.players} />}{' '}
+              {gm && tab === 'Jugadores' && (
+                <PlayersPanel {...shared} players={snapshot.players} snapshot={snapshot} />
+              )}{' '}
               {gm && tab === 'Idiomas' && (
                 <LanguagesPanel {...shared} onPlayers={() => setTab('Jugadores')} />
               )}{' '}

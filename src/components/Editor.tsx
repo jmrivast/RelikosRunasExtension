@@ -43,6 +43,7 @@ export function Editor({
   const [text, setText] = useState(existing?.text ?? '');
   const [unreadable, setUnreadable] = useState(existing?.unreadable ?? '');
   const [partialText, setPartialText] = useState(existing?.partialText ?? '');
+  const [proximity, setProximity] = useState(!!existing?.proximity);
   const [revelations, setRevelations] = useState(existing?.revelations ?? []);
   const [hideTitleFromPlayers, setHideTitleFromPlayers] = useState(
     existing?.hideTitleFromPlayers ?? false,
@@ -76,6 +77,12 @@ export function Editor({
             hideLanguageFromPlayers,
             partialText,
             revelations,
+            proximity: proximity
+              ? {
+                  radiusFeet: 10,
+                  restoreVisible: existing?.proximity?.restoreVisible ?? item.visible,
+                }
+              : undefined,
           },
           openedScene,
         );
@@ -138,6 +145,22 @@ export function Editor({
           </label>
           <p className="muted small">
             Se aplica a la lectura, aunque comprendan el idioma. El DM siempre ve ambos.
+          </p>
+        </fieldset>
+        <fieldset>
+          <legend>Descubrimiento en el mapa</legend>
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={proximity}
+              onChange={(e) => setProximity(e.target.checked)}
+            />
+            Ocultar y permitir leer solo a menos de 10 pies
+          </label>
+          <p className="muted small">
+            Solo aparece al jugador cuyo token asignado esté cerca. Al alejarse desaparece y se
+            cierra su lectura. Asigna los tokens en Jugadores. El DM conserva acceso. La distancia
+            se mide entre centros, en línea recta; no comprueba paredes ni visión.
           </p>
         </fieldset>
         <label htmlFor="inscription-text">Texto verdadero</label>

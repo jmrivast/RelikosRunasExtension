@@ -12,6 +12,7 @@ import {
   SETTINGS_KEY,
   readConfig,
   validPartial,
+  readInscription,
   type Inscription,
   type Language,
   type Profile,
@@ -44,6 +45,12 @@ export class RelikosService {
       id: inscriptionId(itemId),
       objectId: itemId,
     });
+    if (data.proximity) {
+      const item = s.items.find((i) => i.id === itemId)!;
+      if (item.type !== 'IMAGE') throw new Error('La proximidad requiere una imagen de runa.');
+      data.proximity.restoreVisible =
+        readInscription(item)?.proximity?.restoreVisible ?? item.visible;
+    }
     if (data.partialText && !validPartial(data.partialText))
       throw new Error('Cierra cada fragmento oculto con [[ y ]], sin anidar corchetes.');
     if (data.revelations?.some((r) => r.mode === 'partial') && !data.partialText?.trim())
@@ -84,6 +91,17 @@ export class RelikosService {
   }
   async removeProfile(playerId: string) {
     await this.patch(PROFILE_PREFIX + playerId, null);
+  }
+  async assignToken(playerId: string, itemId: string | null, sceneToken: string) {
+    const snapshot = await this.adapter.snapshot();
+    assertGM(snapshot.player);
+    if (!snapshot.ready || snapshot.sceneToken !== sceneToken) throw new Error('La escena cambió.');
+    if (
+      !snapshot.players.some((p) => p.id === playerId && p.role === 'PLAYER') &&
+      !readConfig(snapshot.room).profiles.some((p) => p.playerId === playerId)
+    )
+      throw new Error('Selecciona un jugador conocido de esta sala.');
+    await this.adapter.assignToken(playerId, itemId, sceneToken);
   }
   async saveSettings(value: Settings) {
     await this.patch(SETTINGS_KEY, settingsSchema.parse(value));

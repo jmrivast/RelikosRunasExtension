@@ -31,6 +31,7 @@ beforeEach(() => {
     ready: async () => {},
     snapshot: async () => structuredClone(snapshot),
     subscribe: () => () => {},
+    assignToken: async () => {},
     patchRoom: async (patch) => {
       Object.assign(snapshot.room, patch);
     },
