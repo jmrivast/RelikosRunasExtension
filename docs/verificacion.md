@@ -76,3 +76,16 @@ Una sesión Chromium nueva abrió el sitio público: título correcto, instrucci
 Wrangler 4.151 intentó delegar inicialmente la creación de Pages hacia Workers y falló antes de publicar. Se creó el proyecto directamente en Pages con la opción de creación `--force`; el despliegue posterior normal subió 13 recursos y `_headers` correctamente. No se crearon Workers, bases de datos ni servicios privados. La CLI quedó autorizada por el usuario con lectura de cuenta/usuario y escritura en Pages.
 
 La publicación fue por carga directa con Wrangler. El repositorio Git conserva el código, pero no se configuró integración automática Git → Cloudflare; para actualizar hay que compilar y volver a ejecutar el comando de despliegue.
+## Prueba real de proximidad — 16 de octubre de 2026
+
+Se creó desde el prop una inscripción independiente, «PRUEBA · Proximidad 10 pies», fuera de los mapas preparados. Objeto: `0cd07e30-2306-4b99-a1da-58e5c552f769`. Se creó un segundo prop, se cambió a la capa Personaje y se asignó a Specter únicamente para la prueba: `c945f069-abfa-43d3-b70e-994d7d13d6f8`. No se modificaron las cuatro inscripciones originales ni los permisos de idioma.
+
+Se observó la representación local en la cuenta del jugador con el token cercano y el original atenuado para el DM. El cambio de tamaño del original también se reflejó en esa representación. La automatización no consiguió validar de forma concluyente la apertura y retirada en directo, debido a problemas de selección y sincronización. Posteriormente, el usuario realizó personalmente la prueba en Owlbear y confirmó que funciona bien. La validación funcional final procede de esa prueba manual del usuario.
+
+Se descartó y revirtió un experimento que reutilizaba el ID del original para la copia local. La publicación restaurada `7028e3c8` corresponde nuevamente al código de `12e7848` y conserva UUID independientes. Tras la confirmación del usuario se comprobó de nuevo producción: manifiesto 1.4.0 y `background.html` con respuesta HTTP 200, enlazando `background-CdVdvaqq.js` y `owlbear-DrAKu1O_.js`. Las 61 pruebas unitarias y 30 de navegador son evidencia adicional simulada, distinta de la prueba manual real.
+
+## Visibilidad individual y distancia configurable — 1.5.0
+
+El 16 de octubre de 2026 pasaron TypeScript, ESLint, compilación, 67 pruebas unitarias y 33 pruebas Chromium. Los casos nuevos verifican destinatarios por cuenta sin token, combinación con proximidad de 20 pies, cambio en directo a 12,5 pies, cierre al revocar acceso, destinatarios desconectados, persistencia y restauración de la visibilidad original. El protocolo de metadatos 2 impide que clientes antiguos interpreten una inscripción restringida como pública. Las inscripciones anteriores conservan su configuración.
+
+Se inspeccionó la captura móvil de los controles nuevos, sin desbordamiento horizontal. También pasaron las comprobaciones existentes de consola, idiomas, revelaciones, notas privadas y ausencia de franjas negras. Browser plugin no estaba disponible; se usó Playwright. Estas pruebas utilizan DemoAdapter o transporte SDK simulado: no equivalen a una nueva prueba entre cuentas reales dentro de Owlbear. La comprobación manual del usuario indicada arriba corresponde a 1.4.0. Tras actualizar hay que recargar Owlbear en todas las cuentas.

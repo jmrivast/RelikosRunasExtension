@@ -43,6 +43,9 @@ export function Editor({
   const [text, setText] = useState(existing?.text ?? '');
   const [unreadable, setUnreadable] = useState(existing?.unreadable ?? '');
   const [partialText, setPartialText] = useState(existing?.partialText ?? '');
+  const [restricted, setRestricted] = useState(!!existing?.visibility);
+  const [viewers, setViewers] = useState(existing?.visibility?.players ?? []);
+  const [radiusFeet, setRadiusFeet] = useState(String(existing?.proximity?.radiusFeet ?? 10));
   const [proximity, setProximity] = useState(!!existing?.proximity);
   const [revelations, setRevelations] = useState(existing?.revelations ?? []);
   const [hideTitleFromPlayers, setHideTitleFromPlayers] = useState(
@@ -58,7 +61,7 @@ export function Editor({
   for (const profile of config.profiles)
     if (!readers.has(profile.playerId) && !players.some((p) => p.id === profile.playerId))
       readers.set(profile.playerId, profile.displayName || profile.character || profile.playerId);
-  for (const reveal of revelations)
+  for (const reveal of [...revelations, ...viewers])
     if (!readers.has(reveal.playerId) && !players.some((p) => p.id === reveal.playerId))
       readers.set(reveal.playerId, reveal.displayName || reveal.playerId);
   function submit(e: FormEvent) {
@@ -77,9 +80,10 @@ export function Editor({
             hideLanguageFromPlayers,
             partialText,
             revelations,
+            visibility: restricted ? { players: viewers, restoreVisible: item.visible } : undefined,
             proximity: proximity
               ? {
-                  radiusFeet: 10,
+                  radiusFeet: Number(radiusFeet),
                   restoreVisible: existing?.proximity?.restoreVisible ?? item.visible,
                 }
               : undefined,
@@ -148,6 +152,45 @@ export function Editor({
           </p>
         </fieldset>
         <fieldset>
+          <legend>Quién puede ver esta inscripción</legend>
+          <label>
+            Visibilidad de la inscripción
+            <select
+              aria-label="Visibilidad de la inscripción"
+              value={restricted ? 'selected' : 'all'}
+              onChange={(e) => setRestricted(e.target.value === 'selected')}
+            >
+              <option value="all">Todos los jugadores</option>
+              <option value="selected">Solo jugadores seleccionados</option>
+            </select>
+          </label>
+          {restricted && (
+            <>
+              {[...readers].map(([id, name]) => (
+                <label className="check" key={id}>
+                  <input
+                    type="checkbox"
+                    aria-label={`Puede ver: ${name}`}
+                    checked={viewers.some((p) => p.playerId === id)}
+                    onChange={(e) =>
+                      setViewers((current) =>
+                        e.target.checked
+                          ? [...current, { playerId: id, displayName: name }]
+                          : current.filter((p) => p.playerId !== id),
+                      )
+                    }
+                  />
+                  {config.profiles.find((p) => p.playerId === id)?.character || name}
+                </label>
+              ))}
+              <p className="muted small">
+                El DM siempre la ve. Sin jugadores seleccionados, solo la ve el DM. Los idiomas y
+                revelaciones siguen determinando cómo se comprende el texto.
+              </p>
+            </>
+          )}
+        </fieldset>
+        <fieldset>
           <legend>Descubrimiento en el mapa</legend>
           <label className="check">
             <input
@@ -155,12 +198,28 @@ export function Editor({
               checked={proximity}
               onChange={(e) => setProximity(e.target.checked)}
             />
-            Ocultar y permitir leer solo a menos de 10 pies
+            Ocultar y permitir leer por proximidad
           </label>
+          {proximity && (
+            <label>
+              Distancia de revelación (pies)
+              <input
+                type="number"
+                required
+                min="0.1"
+                max="100000"
+                step="any"
+                value={radiusFeet}
+                onChange={(e) => setRadiusFeet(e.target.value)}
+              />
+            </label>
+          )}
           <p className="muted small">
-            Solo aparece al jugador cuyo token asignado esté cerca. Al alejarse desaparece y se
-            cierra su lectura. Asigna los tokens en Jugadores. El DM conserva acceso. La distancia
-            se mide entre centros, en línea recta; no comprueba paredes ni visión.
+            Con proximidad activada, aparece a menos de la distancia elegida y requiere un token
+            asignado al jugador. Si limitas la visibilidad, solo los jugadores seleccionados pueden
+            descubrirla. Al alejarse desaparece y se cierra su lectura. Asigna los tokens en
+            Jugadores. El DM conserva acceso. La distancia se mide entre centros, en línea recta; no
+            comprueba paredes ni visión.
           </p>
         </fieldset>
         <label htmlFor="inscription-text">Texto verdadero</label>

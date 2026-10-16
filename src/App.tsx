@@ -54,15 +54,15 @@ export function App({ adapter }: { adapter: Adapter }) {
     snapshot && navigation?.view === 'read'
       ? snapshot.items.find((i) => i.id === navigation.itemId)
       : undefined;
-  const lostProximity = !!(
+  const lostAccess = !!(
     snapshot &&
     readingSource &&
-    readInscription(readingSource)?.proximity &&
+    (readInscription(readingSource)?.proximity || readInscription(readingSource)?.visibility) &&
     !canAccessItem(snapshot, readingSource)
   );
   useEffect(() => {
-    if (lostProximity) close();
-  }, [lostProximity, close]);
+    if (lostAccess) close();
+  }, [lostAccess, close]);
   if (!snapshot)
     return (
       <main className="shell">

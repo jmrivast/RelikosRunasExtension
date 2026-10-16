@@ -5,6 +5,8 @@ import {
   TOKEN_PLAYER_KEY,
   SAMPLE,
   type Snapshot,
+  type Inscription,
+  inscriptionSchema,
 } from '../../src/domain';
 import {
   canAccessItem,
@@ -56,6 +58,58 @@ export function spatialSnapshot(): Snapshot {
   };
 }
 describe('radio de descubrimiento', () => {
+  it('combina destinatarios y distancia configurable, sin conceder acceso por idioma o nombre', () => {
+    const s = spatialSnapshot();
+    const inscription = s.items[0].metadata[INSCRIPTION_KEY] as Inscription;
+    inscription.proximity!.radiusFeet = 30;
+    inscription.version = 2;
+    inscription.visibility = {
+      players: [{ playerId: 'p1', displayName: 'P' }],
+      restoreVisible: true,
+    };
+    s.items[1].position!.x = 500;
+    expect(canAccessItem(s, s.items[0])).toBe(true);
+    s.items[1].position!.x = 600;
+    expect(canAccessItem(s, s.items[0])).toBe(false);
+    inscription.proximity!.radiusFeet = 40;
+    expect(canAccessItem(s, s.items[0])).toBe(true);
+    s.player.id = 'excluded';
+    s.items[1].metadata[TOKEN_PLAYER_KEY] = 'excluded';
+    s.items[1].position!.x = 0;
+    expect(canAccessItem(s, s.items[0])).toBe(false);
+    s.player.role = 'GM';
+    expect(canAccessItem(s, s.items[0])).toBe(true);
+  });
+  it('permite visibilidad individual sin token ni distancia y solo DM si no hay destinatarios', () => {
+    const s = spatialSnapshot();
+    const inscription = s.items[0].metadata[INSCRIPTION_KEY] as Inscription;
+    delete inscription.proximity;
+    inscription.version = 2;
+    inscription.visibility = {
+      players: [{ playerId: 'p1', displayName: 'P' }],
+      restoreVisible: false,
+    };
+    s.items.splice(1);
+    s.grid = undefined;
+    expect(canAccessItem(s, s.items[0])).toBe(true);
+    inscription.visibility.players = [];
+    expect(canAccessItem(s, s.items[0])).toBe(false);
+    for (const radiusFeet of [0, -1, Infinity, NaN, 100001]) {
+      expect(
+        inscriptionSchema.safeParse({
+          ...inscription,
+          proximity: { radiusFeet, restoreVisible: false },
+        }).success,
+      ).toBe(false);
+    }
+    expect(
+      inscriptionSchema.safeParse({
+        ...inscription,
+        proximity: { radiusFeet: 2.5, restoreVisible: false },
+      }).success,
+    ).toBe(true);
+  });
+
   it('exige menos de 10 pies exactos, usando la escala y no el zoom', () => {
     const s = spatialSnapshot();
     expect(withinReach(s, s.items[0])).toBe(true);

@@ -6,6 +6,7 @@ import {
   TOKEN_PLAYER_KEY,
   SAMPLE,
   type Snapshot,
+  type Inscription,
 } from '../../src/domain';
 const mock = vi.hoisted(() => ({
   locals: [] as Item[],
@@ -86,6 +87,26 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 describe('representación privada mediante el SDK local', () => {
+  it('crea una copia para un destinatario sin proximidad y la retira al revocar la visibilidad', async () => {
+    const s = snapshot();
+    const inscription = s.items[0].metadata[INSCRIPTION_KEY] as Inscription;
+    delete inscription.proximity;
+    inscription.version = 2;
+    inscription.visibility = {
+      players: [{ playerId: 'one', displayName: 'Uno' }],
+      restoreVisible: true,
+    };
+    s.items.splice(1);
+    s.grid = undefined;
+    const renderer = new OwlbearLocalRunes();
+    await renderer.reconcile(s, () => true);
+    expect(mock.locals).toHaveLength(1);
+    inscription.visibility.players = [{ playerId: 'other', displayName: 'Otro' }];
+    await renderer.reconcile(s, () => true);
+    expect(mock.locals).toHaveLength(0);
+    expect(mock.sharedWrite).not.toHaveBeenCalled();
+  });
+
   it('actualiza la copia sin reenviar campos de auditoría de solo lectura al SDK', async () => {
     const s = snapshot();
     const renderer = new OwlbearLocalRunes();

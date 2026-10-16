@@ -57,7 +57,7 @@ Los fragmentos entre `[[` y `]]` en `partialText` se sustituyen por runas determ
 
 Desde 1.4.0, `proximity?: {radiusFeet: 10, restoreVisible: boolean}` es opcional en la inscripción v1. El adaptador oculta la imagen original en la misma actualización de metadatos; al desactivar/quitar recupera la visibilidad anterior. La asignación se guarda únicamente en la clave propia del token de la escena, validando rol GM, capa Personaje, existencia, cuenta y generación de escena. Un cambio de token elimina las otras asignaciones de esa cuenta en la escena sin tocar metadatos ajenos.
 
-`proximity.ts` calcula un radio euclídeo estricto `< 10 ft` con los centros de `getItemBounds`, DPI y escala real (pies o metros). `localRunes.ts` crea representaciones mediante `OBR.scene.local` solo para la cuenta cuyo token visible asignado está cerca. Mantiene el ID original en los metadatos de la copia para resolver el menú hacia el objeto canónico; retira copias lejanas, duplicadas o sin fuente. Nunca elimina objetos locales ajenos. Un controlador serializa y agrupa cambios de objetos, cuadrícula, sala, rol y escena, descarta snapshots obsoletos y limpia ante error o desmontaje. No utiliza broadcast ni herramientas de inspección.
+`proximity.ts` calcula un radio euclídeo estricto configurable `< radiusFeet` con los centros de `getItemBounds`, DPI y escala real (pies o metros). `localRunes.ts` crea representaciones mediante `OBR.scene.local` solo para la cuenta cuyo token visible asignado está cerca. Mantiene el ID original en los metadatos de la copia para resolver el menú hacia el objeto canónico; retira copias lejanas, duplicadas o sin fuente. Nunca elimina objetos locales ajenos. Un controlador serializa y agrupa cambios de objetos, cuadrícula, sala, rol y escena, descarta snapshots obsoletos y limpia ante error o desmontaje. No utiliza broadcast ni herramientas de inspección.
 
 El adaptador vuelve a validar el acceso al abrir el modal, y el lector reacciona a distancia/asignación para retirar el contenido y cerrarse al perder proximidad. La comprensión por idioma/revelación sigue siendo una comprobación independiente. El DM conserva acceso sin distancia. No se calcula línea de visión ni se interpreta la niebla de Smoke & Spectre; el alcance de esta regla es únicamente distancia, según indica el editor.
 
@@ -75,3 +75,11 @@ El ID canónico de inscripción es `runa:{ID real del objeto}`. Al leer una copi
 - No hay registro duplicado por render de React ni mensajes globales. `modal.open` se llama desde la interacción del cliente; no se utiliza broadcast.
 - Los permisos sobreviven al cambio de escena dentro de una sala. Otra sala tiene su propia configuración. El contenido acompaña al objeto cuando se guarda/duplica la escena.
 - La comprobación definitiva del transporte, sincronización y persistencia de Owlbear requiere cuentas reales; las pruebas simuladas no la sustituyen.
+
+### Visibilidad por destinatarios (1.5.0)
+
+`inscription.visibility` es opcional y contiene `players` (ID y nombre de presentación) y `restoreVisible`. Su ausencia mantiene compatibilidad con inscripciones anteriores. Una lista vacía equivale a solo DM. `canAccessItem` comprueba primero el destinatario y después el radio opcional; con destinatarios y sin radio permite copias sin exigir token. El lector y el adaptador usan la misma condición. El renderizador continúa escribiendo exclusivamente en `scene.local`.
+
+`proximity.radiusFeet` admite números finitos entre 0.1 y 100000. `restoredVisibility` conserva el estado original al alternar reglas; el servicio calcula ese estado de nuevo, sin confiar en el formulario. La ocultación del original y los metadatos se escriben en una sola actualización del SDK. Las reglas de idioma/revelación permanecen independientes.
+
+Las inscripciones con `visibility` usan `version: 2`; sin ese campo conservan `version: 1`. El esquema exige esa correspondencia. El menú admite ambas versiones. Los clientes 1.4 rechazan v2 antes de crear una copia, en lugar de descartar silenciosamente la restricción desconocida.

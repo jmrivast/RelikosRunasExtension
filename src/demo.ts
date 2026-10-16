@@ -10,6 +10,7 @@ import {
   inscriptionId,
   TOKEN_PLAYER_KEY,
   readInscription,
+  restoredVisibility,
   type Snapshot,
   type Inscription,
   type Identity,
@@ -146,11 +147,12 @@ export class DemoAdapter implements Adapter {
     const previous = readInscription(item);
     if (value) {
       item.metadata[INSCRIPTION_KEY] = value;
-      if (value.proximity) item.visible = false;
-      else if (previous?.proximity) item.visible = previous.proximity.restoreVisible;
+      if (value.proximity || value.visibility) item.visible = false;
+      else if (restoredVisibility(previous) !== undefined)
+        item.visible = restoredVisibility(previous)!;
     } else {
       delete item.metadata[INSCRIPTION_KEY];
-      if (previous?.proximity) item.visible = previous.proximity.restoreVisible;
+      if (restoredVisibility(previous) !== undefined) item.visible = restoredVisibility(previous)!;
     }
     this.write(s);
   }

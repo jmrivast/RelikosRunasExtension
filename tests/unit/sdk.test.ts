@@ -62,11 +62,47 @@ const sdk = vi.hoisted(() => {
 vi.mock('@owlbear-rodeo/sdk', () => ({ default: sdk.default }));
 import { OwlbearAdapter, MODAL_ID } from '../../src/owlbear';
 import { registerInteractions } from '../../src/background';
-import { INSCRIPTION_KEY, SAMPLE, NS } from '../../src/domain';
+import { INSCRIPTION_KEY, LOCAL_RUNE_KEY, SAMPLE, NS } from '../../src/domain';
 beforeEach(() => {
   vi.clearAllMocks();
 });
 describe('contratos del adaptador SDK real (transporte simulado)', () => {
+  it('mantiene Leer inscripción para metadatos v2 y resuelve la copia hacia el original', async () => {
+    const adapter = new OwlbearAdapter();
+    const open = vi.spyOn(adapter, 'open').mockResolvedValue();
+    const stop = await registerInteractions(adapter);
+    const menu = sdk.default.contextMenu.create.mock.calls[0][0];
+    expect(
+      menu.icons.map(
+        (icon: { filter: { every: { value: number }[] } }) => icon.filter.every[0].value,
+      ),
+    ).toEqual([1, 2]);
+    menu.onClick({
+      items: [
+        {
+          id: 'local-copy',
+          name: 'Inscripción',
+          visible: true,
+          metadata: {
+            [LOCAL_RUNE_KEY]: 'original',
+            [INSCRIPTION_KEY]: {
+              ...SAMPLE,
+              version: 2,
+              id: 'runa:original',
+              objectId: 'original',
+              visibility: {
+                players: [{ playerId: 'p1', displayName: 'Uno' }],
+                restoreVisible: true,
+              },
+            },
+          },
+        },
+      ],
+    });
+    expect(open).toHaveBeenCalledWith({ view: 'read', itemId: 'original' });
+    await stop();
+  });
+
   it('usa el ID persistente y las APIs oficiales para el snapshot', async () => {
     const adapter = new OwlbearAdapter();
     await adapter.ready();

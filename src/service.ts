@@ -13,6 +13,7 @@ import {
   readConfig,
   validPartial,
   readInscription,
+  restoredVisibility,
   type Inscription,
   type Language,
   type Profile,
@@ -41,15 +42,24 @@ export class RelikosService {
       throw new Error('El objeto ya no existe en esta escena.');
     const data = inscriptionSchema.parse({
       ...input,
-      version: 1,
+      version: input.visibility ? 2 : 1,
       id: inscriptionId(itemId),
       objectId: itemId,
     });
-    if (data.proximity) {
+    if (data.proximity || data.visibility) {
       const item = s.items.find((i) => i.id === itemId)!;
-      if (item.type !== 'IMAGE') throw new Error('La proximidad requiere una imagen de runa.');
-      data.proximity.restoreVisible =
-        readInscription(item)?.proximity?.restoreVisible ?? item.visible;
+      if (item.type !== 'IMAGE')
+        throw new Error('La visibilidad individual y proximidad requieren una imagen de runa.');
+      const restoreVisible = restoredVisibility(readInscription(item)) ?? item.visible;
+      if (data.proximity) data.proximity.restoreVisible = restoreVisible;
+      if (data.visibility) {
+        data.visibility.restoreVisible = restoreVisible;
+        if (
+          new Set(data.visibility.players.map((p) => p.playerId)).size !==
+          data.visibility.players.length
+        )
+          throw new Error('Un jugador no puede aparecer dos veces en la visibilidad.');
+      }
     }
     if (data.partialText && !validPartial(data.partialText))
       throw new Error('Cierra cada fragmento oculto con [[ y ]], sin anidar corchetes.');

@@ -47,7 +47,14 @@ export function withinReach(snapshot: Snapshot, rune: MapItem) {
 export function canAccessItem(snapshot: Snapshot, item: MapItem) {
   if (!snapshot.ready) return false;
   if (snapshot.player.role === 'GM') return true;
-  return readInscription(item)?.proximity ? withinReach(snapshot, item) : item.visible;
+  const inscription = readInscription(item);
+  if (
+    inscription?.visibility &&
+    !inscription.visibility.players.some((p) => p.playerId === snapshot.player.id)
+  )
+    return false;
+  if (inscription?.proximity) return withinReach(snapshot, item);
+  return inscription?.visibility ? true : item.visible;
 }
 export function sourceId(item: MapItem) {
   const source = item.metadata[LOCAL_RUNE_KEY];

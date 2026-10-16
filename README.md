@@ -85,11 +85,11 @@ En **Traducción parcial**, escribe las pistas legibles y encierra los fragmento
 
 Los campos nuevos son opcionales dentro del esquema v1: las inscripciones anteriores funcionan sin migración y sin cambios de permisos hasta que el DM configure una revelación.
 
-## Descubrimiento individual a menos de 10 pies (1.4.0)
+## Descubrimiento individual por distancia (1.4.0)
 
 1. En **Jugadores**, el DM elige el **Token de cada jugador** y pulsa **Guardar token**. Debe ser una imagen de la capa **Personaje** de la escena actual. La cuenta se identifica por ID; no se deduce por quién importó la imagen ni por el nombre del personaje. Un token se asigna a una cuenta; cambiar la asignación retira la anterior de esa cuenta en esta escena.
-2. En **Editar inscripción**, activa **Ocultar y permitir leer solo a menos de 10 pies** y guarda. La imagen original se oculta para jugadores en la misma escritura que guarda la configuración. El DM sigue viéndola y puede editarla.
-3. Cuando el centro del token asignado esté a **menos de 10 pies** del centro de la runa, la extensión crea una copia local solo para ese jugador. A exactamente 10 pies todavía no aparece. La lectura se abre desde el menú del objeto local y conserva las reglas de idioma, revelaciones y ocultación de título/idioma. Acercarse no abre una ventana automáticamente.
+2. En **Editar inscripción**, activa **Ocultar y permitir leer por proximidad** y guarda. La imagen original se oculta para jugadores en la misma escritura que guarda la configuración. El DM sigue viéndola y puede editarla.
+3. Cuando el centro del token asignado esté a **menos de la distancia configurada** del centro de la runa, la extensión crea una copia local solo para ese jugador. A exactamente la distancia configurada todavía no aparece. Las inscripciones anteriores conservan 10 pies. La lectura se abre desde el menú del objeto local y conserva las reglas de idioma, revelaciones y ocultación de título/idioma. Acercarse no abre una ventana automáticamente.
 4. Al alejarse, perder el token asignado o cambiar su asignación, desaparece su copia y se cierra su lectura. Abrir una URL del lector tampoco permite saltarse el control de distancia. Recargar reconstruye las copias válidas.
 
 La distancia es un radio en línea recta entre centros, independiente del zoom y de la regla de diagonales. Usa DPI y escala de la escena; admite pies y metros (convertidos a pies). Una escala desconocida o un token no asignado/oculto falla cerrado. **No comprueba paredes, obstáculos ni línea de visión**. Las copias no se comparten con otros usuarios y se limpian sin borrar objetos locales de otras extensiones.
@@ -142,3 +142,13 @@ Conserva la carpeta del proyecto y `package-lock.json`. Realiza cambios, ejecuta
 Los ajustes y perfiles pertenecen a una sala; las inscripciones al objeto de su escena. El panel lista los objetos que Owlbear entrega y excluye los ocultos para jugadores; no intenta reconstruir visibilidad por niebla. Para secretos de ubicación, mantén oculto el objeto hasta descubrirlo. Los usuarios desconectados conservan permisos. Si varios DMs editan exactamente el mismo registro simultáneamente, prevalece el último guardado; coordinen esas ediciones.
 
 Detalles técnicos y límites: `docs/arquitectura.md`. Investigación de GitHub: misma guía, con archivos y revisiones consultadas. Noto Sans Runic se distribuye bajo SIL OFL, incluida en `public/fonts/OFL.txt`. El icono SVG y el PNG son originales del proyecto; no se usan recursos de Dark Souls ni Elden Ring.
+
+## Visibilidad por jugador y alcance configurable (1.5.0)
+
+En el editor, **Visibilidad de la inscripción** permite elegir **Todos los jugadores** o **Solo jugadores seleccionados**. Marca la cuenta de cada destinatario; también se conservan los destinatarios desconectados. Una lista vacía restringe la runa al DM. La imagen original se oculta y cada destinatario recibe una copia local. El DM conserva la lectura y edición. Los permisos de idioma y las revelaciones siguen determinando la comprensión del texto.
+
+La casilla **Ocultar y permitir leer por proximidad** es independiente. Al activarla, configura **Distancia de revelación (pies)** (por ejemplo, 5, 20, 30 o 12.5). Admite valores de 0.1 a 100000 pies; se usa un radio estricto menor que ese valor. Si combinas ambos controles, solo los destinatarios elegidos que estén dentro del radio pueden descubrir y abrir la inscripción. Sin proximidad, los destinatarios no necesitan un token asignado.
+
+La revocación de un destinatario o la reducción del radio retira su copia y cierra una lectura que haya dejado de estar autorizada. Al desactivar ambas reglas o desvincular la inscripción se restaura la visibilidad original del objeto. No apliques Spectre a la misma runa: Relikos administra sus propias copias y necesita conservar su objeto original en la escena.
+
+Después de actualizar, recarga Owlbear en las cuentas del DM y de los jugadores. Las inscripciones restringidas usan metadatos v2: las pestañas antiguas no las interpretan ni reciben copias, para evitar que ignoren los destinatarios. Las inscripciones sin destinatarios conservan el formato v1.

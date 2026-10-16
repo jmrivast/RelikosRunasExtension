@@ -24,29 +24,41 @@ export const settingsSchema = z.object({
   fontSize: z.number().int().min(16).max(24),
   animate: z.boolean(),
 });
-export const inscriptionSchema = z.object({
-  version: z.literal(1),
-  id,
-  objectId: id,
-  title: z.string().trim().min(1).max(140),
-  languageId: id,
-  text: z.string().trim().min(1).max(12000),
-  unreadable: z.string().max(12000).optional(),
-  hideTitleFromPlayers: z.boolean().optional(),
-  hideLanguageFromPlayers: z.boolean().optional(),
-  proximity: z.object({ radiusFeet: z.literal(10), restoreVisible: z.boolean() }).optional(),
-  partialText: z.string().max(12000).optional(),
-  revelations: z
-    .array(
-      z.object({
-        playerId: id,
-        displayName: z.string().max(100),
-        mode: z.enum(['partial', 'full']),
-      }),
-    )
-    .max(60)
-    .optional(),
-});
+export const inscriptionSchema = z
+  .object({
+    version: z.union([z.literal(1), z.literal(2)]),
+    id,
+    objectId: id,
+    title: z.string().trim().min(1).max(140),
+    languageId: id,
+    text: z.string().trim().min(1).max(12000),
+    unreadable: z.string().max(12000).optional(),
+    hideTitleFromPlayers: z.boolean().optional(),
+    hideLanguageFromPlayers: z.boolean().optional(),
+    proximity: z
+      .object({ radiusFeet: z.number().finite().min(0.1).max(100000), restoreVisible: z.boolean() })
+      .optional(),
+    visibility: z
+      .object({
+        players: z.array(z.object({ playerId: id, displayName: z.string().max(100) })).max(60),
+        restoreVisible: z.boolean(),
+      })
+      .optional(),
+    partialText: z.string().max(12000).optional(),
+    revelations: z
+      .array(
+        z.object({
+          playerId: id,
+          displayName: z.string().max(100),
+          mode: z.enum(['partial', 'full']),
+        }),
+      )
+      .max(60)
+      .optional(),
+  })
+  .refine((data) => (data.version === 2) === !!data.visibility, {
+    message: 'Las restricciones por jugador requieren la versión 2 de la inscripción.',
+  });
 export type Language = z.infer<typeof languageSchema>;
 export type Profile = z.infer<typeof profileSchema>;
 export type Settings = z.infer<typeof settingsSchema>;
@@ -94,6 +106,10 @@ export function inscriptionId(objectId: string) {
 export function readInscription(item: MapItem): Inscription | null {
   const parsed = inscriptionSchema.safeParse(item.metadata[INSCRIPTION_KEY]);
   return parsed.success ? { ...parsed.data, id: inscriptionId(item.id), objectId: item.id } : null;
+}
+/** Preserve the original visibility across any combination of managed visibility rules. */
+export function restoredVisibility(inscription: Inscription | null): boolean | undefined {
+  return inscription?.proximity?.restoreVisible ?? inscription?.visibility?.restoreVisible;
 }
 export function readConfig(room: Record<string, unknown>): Config {
   const warnings: string[] = [];

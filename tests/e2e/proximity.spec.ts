@@ -12,7 +12,7 @@ async function enable(page: Page) {
     .getByRole('button', { name: 'Editar', exact: true })
     .click();
   await page
-    .getByRole('checkbox', { name: 'Ocultar y permitir leer solo a menos de 10 pies' })
+    .getByRole('checkbox', { name: 'Ocultar y permitir leer por proximidad' })
     .check();
   await page.getByRole('checkbox', { name: 'Ocultar título a los jugadores' }).check();
   await page.getByRole('checkbox', { name: 'Ocultar idioma a los jugadores' }).check();
@@ -120,7 +120,7 @@ test('el lector por URL falla cerrado fuera del radio, el DM conserva lectura y 
   await page.getByRole('button', { name: 'Cerrar inscripción', exact: true }).click();
   await page.getByRole('button', { name: 'Editar', exact: true }).click();
   await page
-    .getByRole('checkbox', { name: 'Ocultar y permitir leer solo a menos de 10 pies' })
+    .getByRole('checkbox', { name: 'Ocultar y permitir leer por proximidad' })
     .uncheck();
   await page.getByRole('button', { name: 'Guardar inscripción', exact: true }).click();
   await expect(player.getByRole('button', { name: runeName, exact: true })).toBeVisible();

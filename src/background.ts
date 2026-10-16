@@ -20,17 +20,15 @@ export async function registerInteractions(adapter: OwlbearAdapter) {
   try {
     await OBR.contextMenu.create({
       id: readId,
-      icons: [
-        {
-          icon: '/icon.svg',
-          label: 'Leer inscripción',
-          filter: {
-            min: 1,
-            max: 1,
-            every: [{ key: ['metadata', INSCRIPTION_KEY, 'version'], value: 1 }],
-          },
+      icons: [1, 2].map((version) => ({
+        icon: '/icon.svg',
+        label: 'Leer inscripción',
+        filter: {
+          min: 1,
+          max: 1,
+          every: [{ key: ['metadata', INSCRIPTION_KEY, 'version'], value: version }],
         },
-      ],
+      })),
       onClick(context) {
         const item = context.items[0];
         if (item && readInscription(item)) open('read', sourceId(item));

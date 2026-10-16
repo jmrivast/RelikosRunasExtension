@@ -7,6 +7,7 @@ import {
   LOCAL_RUNE_KEY,
   NS,
   readInscription,
+  restoredVisibility,
   type Inscription,
   type Snapshot,
 } from './domain';
@@ -117,11 +118,13 @@ export class OwlbearAdapter implements Adapter {
         const previous = readInscription(item);
         if (value) {
           item.metadata[INSCRIPTION_KEY] = value;
-          if (value.proximity) item.visible = false;
-          else if (previous?.proximity) item.visible = previous.proximity.restoreVisible;
+          if (value.proximity || value.visibility) item.visible = false;
+          else if (restoredVisibility(previous) !== undefined)
+            item.visible = restoredVisibility(previous)!;
         } else {
           delete item.metadata[INSCRIPTION_KEY];
-          if (previous?.proximity) item.visible = previous.proximity.restoreVisible;
+          if (restoredVisibility(previous) !== undefined)
+            item.visible = restoredVisibility(previous)!;
         }
       }
     });

@@ -164,6 +164,21 @@ describe('escritura rúnica', () => {
     ));
 });
 describe('validación y persistencia', () => {
+  it('versiona restricciones para que clientes antiguos fallen cerrado y conserva inscripciones v1', () => {
+    const visibility = {
+      players: [{ playerId: 'basili', displayName: 'Basili' }],
+      restoreVisible: true,
+    };
+    expect(inscriptionSchema.safeParse(inscription).success).toBe(true);
+    expect(inscriptionSchema.safeParse({ ...inscription, version: 2, visibility }).success).toBe(
+      true,
+    );
+    expect(inscriptionSchema.safeParse({ ...inscription, version: 1, visibility }).success).toBe(
+      false,
+    );
+    expect(inscriptionSchema.safeParse({ ...inscription, version: 99 }).success).toBe(false);
+  });
+
   it('conserva la presentación de inscripciones antiguas sin opciones de ocultación', () => {
     const legacy = inscriptionSchema.parse(inscription);
     expect(inscriptionPresentation(other, legacy)).toEqual({

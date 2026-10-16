@@ -78,6 +78,50 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 describe('proximidad en el adaptador del SDK (transporte simulado)', () => {
+  it('restaura la visibilidad original al cambiar entre destinatarios y proximidad y deniega abrir a excluidos', async () => {
+    const adapter = new OwlbearAdapter();
+    const service = new RelikosService(adapter);
+    const visibility = { players: [{ playerId: 'p1', displayName: 'Uno' }], restoreVisible: false };
+    await service.saveInscription('rune', { ...SAMPLE, visibility }, '0');
+    expect((state.items[0].metadata[INSCRIPTION_KEY] as Inscription).version).toBe(2);
+    expect(state.items[0].visible).toBe(false);
+    expect(
+      (state.items[0].metadata[INSCRIPTION_KEY] as Inscription).visibility?.restoreVisible,
+    ).toBe(true);
+    state.role = 'PLAYER';
+    await adapter.open({ view: 'read', itemId: 'rune' });
+    expect(state.open).toHaveBeenCalledOnce();
+    (state.items[0].metadata[INSCRIPTION_KEY] as Inscription).visibility!.players = [];
+    await expect(adapter.open({ view: 'read', itemId: 'rune' })).rejects.toThrow(/posición/);
+    state.role = 'GM';
+    await service.saveInscription(
+      'rune',
+      { ...SAMPLE, proximity: { radiusFeet: 35, restoreVisible: false } },
+      '0',
+    );
+    expect(
+      (state.items[0].metadata[INSCRIPTION_KEY] as Inscription).proximity?.restoreVisible,
+    ).toBe(true);
+    await service.saveInscription('rune', { ...SAMPLE, visibility }, '0');
+    await service.saveInscription('rune', SAMPLE, '0');
+    expect(state.items[0].visible).toBe(true);
+    state.items[0].visible = false;
+    await service.saveInscription('rune', { ...SAMPLE, visibility }, '0');
+    await service.removeInscription('rune', '0');
+    expect(state.items[0].visible).toBe(false);
+    expect(state.items[0].metadata).toEqual({ foreign: 42 });
+    await expect(
+      service.saveInscription(
+        'rune',
+        {
+          ...SAMPLE,
+          visibility: { ...visibility, players: [...visibility.players, ...visibility.players] },
+        },
+        '0',
+      ),
+    ).rejects.toThrow(/dos veces/);
+  });
+
   it('oculta el original atómicamente y restaura su visibilidad al desactivar o quitar la inscripción', async () => {
     const adapter = new OwlbearAdapter();
     const service = new RelikosService(adapter);

@@ -6,7 +6,7 @@ import {
   type MapItem,
   type Snapshot,
 } from './domain';
-import { withinReach, type LocalRuneRenderer } from './proximity';
+import { canAccessItem, type LocalRuneRenderer } from './proximity';
 
 function copyForPlayer(source: MapItem, playerId: string, id: string): Item {
   const copy = { ...structuredClone(source), id } as Item & { center?: unknown };
@@ -63,8 +63,8 @@ export class OwlbearLocalRunes implements LocalRuneRenderer {
               (item) =>
                 item.type === 'IMAGE' &&
                 !item.metadata[LOCAL_RUNE_KEY] &&
-                readInscription(item)?.proximity &&
-                withinReach(snapshot, item),
+                (readInscription(item)?.proximity || readInscription(item)?.visibility) &&
+                canAccessItem(snapshot, item),
             )
             .map((item) => [item.id, item]),
     );
