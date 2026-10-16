@@ -62,12 +62,13 @@ export function App({ adapter }: { adapter: Adapter }) {
     ? snapshot.items.find((i) => i.id === navigation.itemId && (gm || i.visible))
     : undefined;
   const inscription = item ? readInscription(item) : null;
-  const routeModal = !adapter.demo && params.has('view');
+  const surface = document.documentElement.dataset.surface;
+  const routeModal = surface === 'modal' && params.has('view');
   const shared = { config, service, run, busy };
   const demo = adapter as DemoAdapter;
   return (
     <>
-      {adapter.demo && (
+      {adapter.demo && surface === 'standalone' && (
         <aside className="demo-bar">
           <strong>Entorno de pruebas · SDK simulado</strong>
           <span>{snapshot.player.name}</span>

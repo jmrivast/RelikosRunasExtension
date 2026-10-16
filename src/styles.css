@@ -18,6 +18,18 @@ body {
   margin: 0;
   min-width: 260px;
 }
+/* Owlbear already provides the outer modal backdrop. Keep its iframe canvas clear. */
+html[data-surface='modal'],
+html[data-surface='popover'] {
+  background: transparent;
+  color-scheme: normal;
+}
+html[data-surface='modal'] body,
+html[data-surface='popover'] body,
+html[data-surface='modal'] #root,
+html[data-surface='popover'] #root {
+  background: transparent;
+}
 button,
 input,
 textarea,
@@ -100,6 +112,7 @@ code {
 }
 .shell,
 dialog {
+  color-scheme: dark;
   background:
     radial-gradient(ellipse at 20% 0%, #59616a0e, transparent 55%), url('/ash.svg'), var(--bg);
   border: 1px solid var(--line);
@@ -114,6 +127,12 @@ dialog {
   margin: 14px auto;
   padding: 32px 30px 18px;
   position: relative;
+}
+html[data-surface='popover'] .shell {
+  width: 100%;
+  max-width: none;
+  min-height: 100dvh;
+  margin: 0;
 }
 .shell:before,
 .shell:after,
@@ -488,6 +507,10 @@ dialog {
 dialog::backdrop {
   background: #05090de8;
   backdrop-filter: blur(5px);
+}
+html[data-surface='modal'] dialog::backdrop {
+  background: transparent;
+  backdrop-filter: none;
 }
 .sr-only {
   position: absolute;

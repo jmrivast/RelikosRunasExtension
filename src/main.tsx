@@ -4,6 +4,16 @@ import { App } from './App';
 import { OwlbearAdapter } from './owlbear';
 import type { Adapter } from './adapter';
 import './styles.css';
+const params = new URLSearchParams(location.search);
+const previewSurface =
+  import.meta.env.DEV && params.get('demo') === '1' ? params.get('embed') : null;
+document.documentElement.dataset.surface = OBR.isAvailable
+  ? params.has('view')
+    ? 'modal'
+    : 'popover'
+  : previewSurface === 'modal' || previewSurface === 'popover'
+    ? previewSurface
+    : 'standalone';
 const root = createRoot(document.getElementById('root')!);
 async function start() {
   let adapter: Adapter;
