@@ -152,3 +152,14 @@ La casilla **Ocultar y permitir leer por proximidad** es independiente. Al activ
 La revocación de un destinatario o la reducción del radio retira su copia y cierra una lectura que haya dejado de estar autorizada. Al desactivar ambas reglas o desvincular la inscripción se restaura la visibilidad original del objeto. No apliques Spectre a la misma runa: Relikos administra sus propias copias y necesita conservar su objeto original en la escena.
 
 Después de actualizar, recarga Owlbear en las cuentas del DM y de los jugadores. Las inscripciones restringidas usan metadatos v2: las pestañas antiguas no las interpretan ni reciben copias, para evitar que ignoren los destinatarios. Las inscripciones sin destinatarios conservan el formato v1.
+
+
+## Imágenes en inscripciones — 1.6.0
+
+En el editor, «Imagen de la inscripción → Contenido al abrir» permite elegir Solo texto, Texto con imagen o Solo imagen en grande. En modo complementario se puede colocar arriba o debajo del texto y pulsar para ampliar. En Solo imagen se muestra únicamente la imagen y controles de cierre y tamaño; el título sigue siendo una etiqueta administrativa del DM, no aparece en el lector. Este modo permite dejar el texto vacío y conserva cualquier texto anterior para volver al modo de texto.
+
+Usa «Elegir imagen de Owlbear» para compartir un recurso desde el selector oficial, o pega una URL HTTPS directa. Para subir un archivo, añádelo primero a tus recursos de Owlbear. No se incrustan archivos ni base64 en los metadatos: se conserva la URL original y no se reduce la resolución. Una URL externa debe seguir accesible para los jugadores; quitar el recurso o caducar su enlace puede impedir que cargue. El visor ofrece ajuste a pantalla, tamaño original con desplazamiento y reintento si falla la carga.
+
+«Quién puede ver la imagen» permite mostrarla al descubrir la inscripción o exigir comprensión completa (por idioma o revelación completa). Una traducción parcial no concede la imagen restringida. La selección de jugadores y proximidad se aplican siempre antes de abrir el lector. Como el resto de la extensión, son reglas de presentación para cuentas que respetan los secretos; la URL no es un archivo cifrado ni un control de acceso del alojamiento.
+
+Los objetos con imagen usan metadatos v3 para que clientes antiguos no ignoren su modo o restricciones; los objetos anteriores mantienen v1/v2. Recarga Owlbear en las cuentas del DM y jugadores tras actualizar. No hace falta reinstalar.

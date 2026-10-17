@@ -150,22 +150,30 @@ export class OwlbearAdapter implements Adapter {
       }
     });
   }
+  async chooseImage() {
+    assertGM({ id: '', name: '', role: await OBR.player.getRole() });
+    const images = await OBR.assets.downloadImages(false);
+    return images[0]?.image.url ?? null;
+  }
   async selected() {
     return (await OBR.player.getSelection()) ?? [];
   }
   async open({ view, itemId }: Navigation) {
+    let media = false;
     if (view === 'read') {
       const snapshot = await this.snapshot();
       const item = snapshot.items.find((i) => i.id === itemId && !i.metadata[LOCAL_RUNE_KEY]);
       if (!item || !readInscription(item) || !canAccessItem(snapshot, item))
         throw new Error('La inscripción no está disponible desde tu posición.');
+      media = !!readInscription(item)?.media;
     }
     const height = await OBR.viewport.getHeight();
+    const width = media ? Math.min(1600, Math.max(260, (await OBR.viewport.getWidth()) - 32)) : 600;
     await OBR.modal.open({
       id: MODAL_ID,
       url: `/index.html?view=${view}&item=${encodeURIComponent(itemId)}`,
-      width: 600,
-      height: Math.min(780, Math.max(300, height - 32)),
+      width,
+      height: media ? Math.max(300, height - 32) : Math.min(780, Math.max(300, height - 32)),
       hidePaper: true,
     });
   }

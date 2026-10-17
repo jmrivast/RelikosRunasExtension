@@ -10,6 +10,7 @@ export interface Adapter {
   selected(): Promise<string[]>;
   open(view: Navigation): Promise<void>;
   close(): Promise<void>;
+  chooseImage?(): Promise<string | null>;
   demo: boolean;
 }
 export function visibleItems(items: MapItem[], role: Snapshot['player']['role']) {

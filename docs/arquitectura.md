@@ -83,3 +83,10 @@ El ID canónico de inscripción es `runa:{ID real del objeto}`. Al leer una copi
 `proximity.radiusFeet` admite números finitos entre 0.1 y 100000. `restoredVisibility` conserva el estado original al alternar reglas; el servicio calcula ese estado de nuevo, sin confiar en el formulario. La ocultación del original y los metadatos se escriben en una sola actualización del SDK. Las reglas de idioma/revelación permanecen independientes.
 
 Las inscripciones con `visibility` usan `version: 2`; sin ese campo conservan `version: 1`. El esquema exige esa correspondencia. El menú admite ambas versiones. Los clientes 1.4 rechazan v2 antes de crear una copia, en lugar de descartar silenciosamente la restricción desconocida.
+
+
+### Imágenes (1.6)
+
+`media` opcional guarda URL HTTPS, modo `text`/`image`, posición `before`/`after` y audiencia `discover`/`read`. Se guarda protocolo v3 solo cuando hay media; v1/v2 anteriores siguen válidos. El texto admite vacío exclusivamente en modo imagen. El lector comprueba la audiencia antes de montar el elemento img, así una cuenta sin comprensión completa no solicita el recurso restringido. La revocación en directo elimina el elemento; la revocación de acceso al objeto cierra también el visor, reutilizando el control existente de proximidad y destinatarios.
+
+El adaptador usa `OBR.assets.downloadImages(false)` como selector de recursos, devuelve la URL de ImageContent y abre el lector multimedia con las dimensiones del viewport. Las imágenes nunca se escriben en metadatos de sala. No se añade backend, dependencia ni servidor de archivos. El visor utiliza la URL original sin miniaturas ni recomprimir; ofrece object-fit contain y tamaño natural con scroll. Las fuentes remotas se cargan sin referrer y sus errores permiten reintento y cierre.

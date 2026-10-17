@@ -1,4 +1,7 @@
+import { useState } from 'react';
+import { InscriptionImage } from './InscriptionImage';
 import {
+  canViewImage,
   readingMode,
   inscriptionPresentation,
   reading,
@@ -19,6 +22,40 @@ export function Reader({
 }) {
   const mode = readingMode(player, inscription, config);
   const presentation = inscriptionPresentation(player, inscription);
+  const [expanded, setExpanded] = useState(false);
+  const media = inscription.media;
+  const imageAllowed = canViewImage(player, inscription, config);
+  if (media?.mode === 'image' || (expanded && media && imageAllowed)) {
+    return (
+      <article className="image-stage">
+        <h1 id="dialog-title" className="sr-only">
+          Inscripción
+        </h1>
+        <button className="close" onClick={onClose} aria-label="Cerrar inscripción">
+          ×
+        </button>
+        {media && imageAllowed ? (
+          <InscriptionImage key={media.url} url={media.url} expanded />
+        ) : (
+          <p className="image-error">No puedes comprender esta imagen.</p>
+        )}
+        {media?.mode !== 'image' && (
+          <button className="image-back" onClick={() => setExpanded(false)}>
+            Volver al texto
+          </button>
+        )}
+      </article>
+    );
+  }
+  const picture =
+    media && imageAllowed ? (
+      <InscriptionImage
+        key={media.url}
+        url={media.url}
+        expanded={false}
+        onExpand={() => setExpanded(true)}
+      />
+    ) : null;
   return (
     <article
       className={`reader ${config.settings.animate ? 'appear' : ''}`}
@@ -40,6 +77,7 @@ export function Reader({
       <div className="ornament" aria-hidden="true">
         ◇
       </div>
+      {media?.position === 'before' && picture}
       <div
         className={`reading ${mode === 'runes' ? 'runes' : mode === 'partial' ? 'partial-reading' : ''}`}
         data-testid="reading"
@@ -53,6 +91,7 @@ export function Reader({
       >
         {reading(player, inscription, config)}
       </div>
+      {media?.position === 'after' && picture}
       {mode !== 'full' && (
         <p className="unreadable-hint">
           {mode === 'partial'

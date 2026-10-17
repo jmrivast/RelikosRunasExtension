@@ -53,7 +53,10 @@ const sdk = vi.hoisted(() => {
       },
       contextMenu: { create: vi.fn(), remove: vi.fn() },
       tool: { create: vi.fn(), createMode: vi.fn(), remove: vi.fn(), removeMode: vi.fn() },
-      viewport: { getHeight: vi.fn(async () => 900) },
+      assets: {
+        downloadImages: vi.fn(async () => [{ image: { url: 'https://assets.example/image.png' } }]),
+      },
+      viewport: { getHeight: vi.fn(async () => 900), getWidth: vi.fn(async () => 1800) },
       modal: { open: vi.fn(), close: vi.fn() },
       notification: { show: vi.fn() },
     },
@@ -67,6 +70,30 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 describe('contratos del adaptador SDK real (transporte simulado)', () => {
+  it('elige el recurso original de Owlbear y abre imágenes con espacio de primer plano', async () => {
+    const adapter = new OwlbearAdapter();
+    expect(await adapter.chooseImage()).toBe('https://assets.example/image.png');
+    expect(sdk.default.assets.downloadImages).toHaveBeenCalledWith(false);
+    const snapshot = await adapter.snapshot();
+    const source = snapshot.items[0];
+    source.metadata[INSCRIPTION_KEY] = {
+      ...SAMPLE,
+      version: 3,
+      id: 'runa:obj',
+      objectId: 'obj',
+      media: {
+        url: 'https://assets.example/image.png',
+        mode: 'image',
+        position: 'after',
+        audience: 'discover',
+      },
+    };
+    vi.spyOn(adapter, 'snapshot').mockResolvedValue({ ...snapshot, items: [source] });
+    await adapter.open({ view: 'read', itemId: 'obj' });
+    expect(sdk.default.modal.open).toHaveBeenCalledWith(
+      expect.objectContaining({ width: 1600, height: 868, hidePaper: true }),
+    );
+  });
   it('mantiene Leer inscripción para metadatos v2 y resuelve la copia hacia el original', async () => {
     const adapter = new OwlbearAdapter();
     const open = vi.spyOn(adapter, 'open').mockResolvedValue();
@@ -76,7 +103,7 @@ describe('contratos del adaptador SDK real (transporte simulado)', () => {
       menu.icons.map(
         (icon: { filter: { every: { value: number }[] } }) => icon.filter.every[0].value,
       ),
-    ).toEqual([1, 2]);
+    ).toEqual([1, 2, 3]);
     menu.onClick({
       items: [
         {

@@ -13,6 +13,7 @@ import type { RelikosService } from '../service';
 import type { Run } from '../types';
 export function Editor({
   item,
+  chooseImage,
   existing,
   config,
   players,
@@ -25,6 +26,7 @@ export function Editor({
   onClose,
 }: {
   item: MapItem;
+  chooseImage?: () => Promise<string | null>;
   existing: Inscription | null;
   config: Config;
   players: Identity[];
@@ -40,6 +42,12 @@ export function Editor({
   const [languageId, setLanguageId] = useState(
     existing?.languageId ?? config.languages[0]?.id ?? '',
   );
+  const [mediaMode, setMediaMode] = useState<'none' | 'text' | 'image'>(
+    existing?.media?.mode ?? 'none',
+  );
+  const [imageUrl, setImageUrl] = useState(existing?.media?.url ?? '');
+  const [imagePosition, setImagePosition] = useState(existing?.media?.position ?? 'after');
+  const [imageAudience, setImageAudience] = useState(existing?.media?.audience ?? 'discover');
   const [text, setText] = useState(existing?.text ?? '');
   const [unreadable, setUnreadable] = useState(existing?.unreadable ?? '');
   const [partialText, setPartialText] = useState(existing?.partialText ?? '');
@@ -75,6 +83,15 @@ export function Editor({
             title,
             languageId,
             text,
+            media:
+              mediaMode !== 'none'
+                ? {
+                    url: imageUrl,
+                    mode: mediaMode,
+                    position: imagePosition,
+                    audience: imageAudience,
+                  }
+                : undefined,
             unreadable,
             hideTitleFromPlayers,
             hideLanguageFromPlayers,
@@ -222,60 +239,147 @@ export function Editor({
             comprueba paredes ni visión.
           </p>
         </fieldset>
-        <label htmlFor="inscription-text">Texto verdadero</label>
-        <textarea
-          id="inscription-text"
-          required
-          aria-label="Texto verdadero"
-          maxLength={12000}
-          rows={7}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-        />
-        <label htmlFor="inscription-unreadable">
-          Escritura indescifrable personalizada <span className="muted">(opcional)</span>
-        </label>
-        <textarea
-          id="inscription-unreadable"
-          aria-label="Escritura indescifrable personalizada"
-          maxLength={12000}
-          rows={3}
-          value={unreadable}
-          onChange={(e) => setUnreadable(e.target.value)}
-        />
-        <p className="muted small">
-          Si la dejas vacía, se generarán runas estables automáticamente.
-        </p>
-        <details className="editor-section">
-          <summary>Traducción parcial</summary>
-          <p className="muted small">
-            Escribe las pistas legibles y encierra los fragmentos que seguirán siendo runas entre
-            dobles corchetes. Ejemplo: [[El rey]] regresa [[al norte]]. Solo la verán los jugadores
-            a los que asignes Traducción parcial abajo.
-          </p>
-          <label htmlFor="partial-text">Texto de traducción parcial</label>
-          <textarea
-            id="partial-text"
-            maxLength={12000}
-            rows={4}
-            value={partialText}
-            onChange={(e) => setPartialText(e.target.value)}
-            placeholder="[[Fragmento oculto]] palabras legibles [[otro secreto]]"
-          />
-          {partialText.trim() &&
-            (validPartial(partialText) ? (
-              <div className="partial-preview">
-                <p className="muted small">Vista previa de la traducción parcial</p>
-                <div className="reading partial-reading" data-testid="partial-preview">
-                  {partialReading(partialText, existing?.id ?? `runa:${item.id}`)}
-                </div>
-              </div>
-            ) : (
-              <p role="alert" className="error">
-                Cierra cada fragmento oculto con [[ y ]], sin anidar corchetes.
+        <fieldset>
+          <legend>Imagen de la inscripción</legend>
+          <label>
+            Contenido al abrir
+            <select
+              aria-label="Contenido al abrir"
+              value={mediaMode}
+              onChange={(e) => setMediaMode(e.target.value as 'none' | 'text' | 'image')}
+            >
+              <option value="none">Solo texto (actual)</option>
+              <option value="text">Texto con imagen</option>
+              <option value="image">Solo imagen en grande</option>
+            </select>
+          </label>
+          {mediaMode !== 'none' && (
+            <>
+              {chooseImage && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() =>
+                    void run(async () => {
+                      const url = await chooseImage();
+                      if (url) setImageUrl(url);
+                    })
+                  }
+                >
+                  Elegir imagen de Owlbear
+                </button>
+              )}
+              <label>
+                URL HTTPS de la imagen
+                <input
+                  type="url"
+                  required
+                  maxLength={2048}
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="https://…/imagen.png"
+                />
+              </label>
+              <p className="muted small">
+                Usa una imagen de tus recursos de Owlbear o una URL directa. Se conserva su
+                resolución original; no se guarda una copia reducida. Para subir un archivo, añádelo
+                primero a tus recursos de Owlbear.
               </p>
-            ))}
-        </details>
+              {mediaMode === 'text' && (
+                <label>
+                  Posición de la imagen
+                  <select
+                    aria-label="Posición de la imagen"
+                    value={imagePosition}
+                    onChange={(e) => setImagePosition(e.target.value as 'before' | 'after')}
+                  >
+                    <option value="before">Encima del texto</option>
+                    <option value="after">Debajo del texto</option>
+                  </select>
+                </label>
+              )}
+              <label>
+                Quién puede ver la imagen
+                <select
+                  aria-label="Quién puede ver la imagen"
+                  value={imageAudience}
+                  onChange={(e) => setImageAudience(e.target.value as 'discover' | 'read')}
+                >
+                  <option value="discover">Quien descubra la inscripción</option>
+                  <option value="read">Solo quien comprenda el contenido completo</option>
+                </select>
+              </label>
+              <p className="muted small">
+                Siempre se respetan los jugadores seleccionados y la proximidad. El DM puede verla.
+                En Solo imagen no se muestran título, idioma ni texto.
+              </p>
+              {imageUrl.startsWith('https://') && (
+                <img
+                  className="image-preview"
+                  src={imageUrl}
+                  referrerPolicy="no-referrer"
+                  alt="Vista previa de la imagen"
+                />
+              )}
+            </>
+          )}
+        </fieldset>
+        <div hidden={mediaMode === 'image'}>
+          <label htmlFor="inscription-text">Texto verdadero</label>
+          <textarea
+            id="inscription-text"
+            required={mediaMode !== 'image'}
+            aria-label="Texto verdadero"
+            maxLength={12000}
+            rows={7}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+          />
+          <label htmlFor="inscription-unreadable">
+            Escritura indescifrable personalizada <span className="muted">(opcional)</span>
+          </label>
+          <textarea
+            id="inscription-unreadable"
+            aria-label="Escritura indescifrable personalizada"
+            maxLength={12000}
+            rows={3}
+            value={unreadable}
+            onChange={(e) => setUnreadable(e.target.value)}
+          />
+          <p className="muted small">
+            Si la dejas vacía, se generarán runas estables automáticamente.
+          </p>
+          <details className="editor-section">
+            <summary>Traducción parcial</summary>
+            <p className="muted small">
+              Escribe las pistas legibles y encierra los fragmentos que seguirán siendo runas entre
+              dobles corchetes. Ejemplo: [[El rey]] regresa [[al norte]]. Solo la verán los
+              jugadores a los que asignes Traducción parcial abajo.
+            </p>
+            <label htmlFor="partial-text">Texto de traducción parcial</label>
+            <textarea
+              id="partial-text"
+              maxLength={12000}
+              rows={4}
+              value={partialText}
+              onChange={(e) => setPartialText(e.target.value)}
+              placeholder="[[Fragmento oculto]] palabras legibles [[otro secreto]]"
+            />
+            {partialText.trim() &&
+              (validPartial(partialText) ? (
+                <div className="partial-preview">
+                  <p className="muted small">Vista previa de la traducción parcial</p>
+                  <div className="reading partial-reading" data-testid="partial-preview">
+                    {partialReading(partialText, existing?.id ?? `runa:${item.id}`)}
+                  </div>
+                </div>
+              ) : (
+                <p role="alert" className="error">
+                  Cierra cada fragmento oculto con [[ y ]], sin anidar corchetes.
+                </p>
+              ))}
+          </details>
+        </div>
         <details className="editor-section">
           <summary>Revelación por jugador</summary>
           <p className="muted small">

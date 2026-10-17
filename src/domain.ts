@@ -24,14 +24,34 @@ export const settingsSchema = z.object({
   fontSize: z.number().int().min(16).max(24),
   animate: z.boolean(),
 });
+export const imageUrlSchema = z
+  .string()
+  .trim()
+  .max(2048)
+  .url()
+  .refine((value) => {
+    try {
+      const url = new URL(value);
+      return url.protocol === 'https:' && !url.username && !url.password;
+    } catch {
+      return false;
+    }
+  }, 'Usa una URL HTTPS directa a la imagen, sin credenciales.');
+export const mediaSchema = z.object({
+  url: imageUrlSchema,
+  mode: z.enum(['text', 'image']),
+  position: z.enum(['before', 'after']),
+  audience: z.enum(['discover', 'read']),
+});
 export const inscriptionSchema = z
   .object({
-    version: z.union([z.literal(1), z.literal(2)]),
+    version: z.union([z.literal(1), z.literal(2), z.literal(3)]),
     id,
     objectId: id,
     title: z.string().trim().min(1).max(140),
     languageId: id,
-    text: z.string().trim().min(1).max(12000),
+    text: z.string().trim().max(12000),
+    media: mediaSchema.optional(),
     unreadable: z.string().max(12000).optional(),
     hideTitleFromPlayers: z.boolean().optional(),
     hideLanguageFromPlayers: z.boolean().optional(),
@@ -56,8 +76,12 @@ export const inscriptionSchema = z
       .max(60)
       .optional(),
   })
-  .refine((data) => (data.version === 2) === !!data.visibility, {
-    message: 'Las restricciones por jugador requieren la versión 2 de la inscripción.',
+  .refine((data) => data.version === (data.media ? 3 : data.visibility ? 2 : 1), {
+    message: 'La versión de la inscripción no corresponde a sus funciones.',
+  })
+  .refine((data) => data.media?.mode === 'image' || data.text.length > 0, {
+    message: 'Escribe el texto o elige el modo Solo imagen.',
+    path: ['text'],
   });
 export type Language = z.infer<typeof languageSchema>;
 export type Profile = z.infer<typeof profileSchema>;
@@ -192,4 +216,12 @@ export function reading(player: Identity, inscription: Inscription, config: Conf
   if (mode === 'full') return inscription.text;
   if (mode === 'partial') return partialReading(inscription.partialText!, inscription.id);
   return inscription.unreadable?.trim() || runes(inscription.text, inscription.id);
+}
+
+export function canViewImage(player: Identity, inscription: Inscription, config: Config) {
+  return (
+    !!inscription.media &&
+    (inscription.media.audience === 'discover' ||
+      readingMode(player, inscription, config) === 'full')
+  );
 }

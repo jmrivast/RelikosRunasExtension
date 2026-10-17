@@ -20,7 +20,7 @@ export async function registerInteractions(adapter: OwlbearAdapter) {
   try {
     await OBR.contextMenu.create({
       id: readId,
-      icons: [1, 2].map((version) => ({
+      icons: [1, 2, 3].map((version) => ({
         icon: '/icon.svg',
         label: 'Leer inscripción',
         filter: {

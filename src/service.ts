@@ -42,7 +42,7 @@ export class RelikosService {
       throw new Error('El objeto ya no existe en esta escena.');
     const data = inscriptionSchema.parse({
       ...input,
-      version: input.visibility ? 2 : 1,
+      version: input.media ? 3 : input.visibility ? 2 : 1,
       id: inscriptionId(itemId),
       objectId: itemId,
     });

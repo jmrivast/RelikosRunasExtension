@@ -201,6 +201,7 @@ export function App({ adapter }: { adapter: Adapter }) {
               <Editor
                 key={`${snapshot.roomId}:${snapshot.sceneToken}:${item.id}`}
                 {...{ item, config, service, run, busy }}
+                chooseImage={adapter.chooseImage ? () => adapter.chooseImage!() : undefined}
                 roomId={snapshot.roomId}
                 player={snapshot.player}
                 players={snapshot.players}
